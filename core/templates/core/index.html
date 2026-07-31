@@ -377,6 +377,12 @@
       background: #0a0d16;
     }
 
+    #fullmap {
+      width: 100%;
+      height: 100%;
+      background: #0a0d16;
+    }
+
     /* DETAILS PANEL */
     .details {
       padding: 12px 14px;
@@ -1212,6 +1218,9 @@
 
       if (viewName === 'fullmap') {
         initFullMap();
+        setTimeout(() => {
+          if (fullmap) fullmap.invalidateSize();
+        }, 120);
       } else if (viewName === 'reports') {
         fetchReports();
       }
@@ -1240,7 +1249,7 @@
 
           marker.bindPopup(`<strong>${inc.disasterType}</strong><br/>${inc.locationName}<br/>Score: ${score}`);
         });
-      }, 100);
+      }, 120);
     }
 
     function openIngestModal() {
