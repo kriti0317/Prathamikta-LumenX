@@ -11,6 +11,7 @@ urlpatterns = [
     path('api/config/update/', views.update_config, name='update_config'),
     path('api/incidents/<str:incident_id>/override/', views.incident_override, name='incident_override'),
     path('api/chatbot/query/', views.chatbot_query, name='chatbot_query'),
+    path('api/nearby/aid/', views.nearby_aid_layer, name='nearby_aid_layer'),
     path('api/feeds/gdacs/', views.fetch_gdacs_feeds, name='fetch_gdacs_feeds'),
     path('api/feeds/gdacs/sync/', views.sync_gdacs_live_feed, name='sync_gdacs_live_feed'),
 ]

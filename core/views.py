@@ -2,6 +2,9 @@ import json
 import requests
 import threading
 from django.db import close_old_connections
+import ssl
+import urllib.request
+import urllib.parse
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -620,6 +623,86 @@ def chatbot_query(request):
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+def nearby_aid_layer(request):
+    """
+    Returns live nearby IATI responder activity records from d-portal's public dquery endpoint.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        district = (data.get('district') or '').strip()
+        location = (data.get('location') or '').strip()
+        lat = float(data.get('lat', 0) or 0)
+        lng = float(data.get('lng', 0) or 0)
+
+        if not lat or not lng:
+            return JsonResponse({
+                'success': True,
+                'source': 'd-portal IATI live activity search',
+                'resourceCount': 0,
+                'nearby': [],
+                'query': 'no coordinates'
+            })
+
+        lat_delta = 0.6
+        lng_delta = 0.8
+        min_lat = max(-90, lat - lat_delta)
+        max_lat = min(90, lat + lat_delta)
+        min_lng = max(-180, lng - lng_delta)
+        max_lng = min(180, lng + lng_delta)
+
+        sql = (
+            "SELECT a.aid, a.title, a.reporting, a.reporting_ref, l.location_name, "
+            "l.location_latitude, l.location_longitude "
+            "FROM act a JOIN location l ON l.aid = a.aid "
+            f"WHERE l.location_latitude BETWEEN {min_lat} AND {max_lat} "
+            f"AND l.location_longitude BETWEEN {min_lng} AND {max_lng} "
+            "LIMIT 5"
+        )
+
+        query_url = 'https://d-portal.iatistandard.org/dquery?sql=' + urllib.parse.quote(sql)
+        ctx = ssl._create_unverified_context()
+        req = urllib.request.Request(
+            query_url,
+            headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json'}
+        )
+        with urllib.request.urlopen(req, timeout=18, context=ctx) as resp:
+            payload = json.loads(resp.read().decode('utf-8'))
+
+        rows = payload.get('rows', [])
+        nearby = []
+        for row in rows:
+            lat_val = row.get('location_latitude')
+            lng_val = row.get('location_longitude')
+            if not lat_val or not lng_val:
+                continue
+
+            nearby.append({
+                'aid': row.get('aid'),
+                'title': row.get('title') or 'IATI activity',
+                'organization': row.get('reporting') or row.get('reporting_ref') or 'Unknown organisation',
+                'contact': row.get('reporting_ref') or row.get('reporting') or 'Contact not disclosed',
+                'datasetUrl': f"https://d-portal.iatistandard.org/ctrack.html#/search?search={urllib.parse.quote(row.get('aid') or '')}&view=main",
+                'notes': (f"{row.get('location_name') or 'Exact location'} near {location or district or 'incident'}").strip()[:180],
+                'lat': float(lat_val),
+                'lng': float(lng_val)
+            })
+
+        return JsonResponse({
+            'success': True,
+            'source': 'd-portal IATI live activity search',
+            'resourceCount': len(nearby),
+            'nearby': nearby,
+            'query': sql
+        })
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 
 def get_all_signals(request):
     """

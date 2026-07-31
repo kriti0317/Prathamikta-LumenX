@@ -521,6 +521,29 @@
       text-decoration: underline;
     }
 
+    .nearby-aid-card {
+      background: rgba(10, 15, 25, 0.48);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nearby-aid-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: white;
+    }
+
+    .nearby-aid-meta {
+      font-size: 10px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
     .detail-empty {
       padding: 60px 16px;
       text-align: center;
@@ -1199,6 +1222,8 @@
     let selectedIncId = null;
     let map = null;
     let fullmap = null;
+    let nearbyAidLayer = null;
+    let fullMapNearbyAidLayer = null;
     const districtCoords = {
       lalitpur: { lat: 27.632, lng: 85.295 },
       kathmandu: { lat: 27.717, lng: 85.324 },
@@ -1311,6 +1336,40 @@
     function initMap() {
       map = L.map('map', { center: [28.1, 84.4], zoom: 8, zoomControl: false, attributionControl: false });
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(map);
+      nearbyAidLayer = L.layerGroup().addTo(map);
+    }
+
+    function clearNearbyAidMarkers() {
+      if (nearbyAidLayer) nearbyAidLayer.clearLayers();
+      if (fullMapNearbyAidLayer) fullMapNearbyAidLayer.clearLayers();
+    }
+
+    function drawNearbyAidMarkers(nearbyList, inc, targetLayer = nearbyAidLayer) {
+      if (!targetLayer || !inc) return;
+
+      const baseLat = Number(inc.lat) || 28.1;
+      const baseLng = Number(inc.lng) || 84.4;
+      nearbyList.forEach((item, index) => {
+        const lat = Number(item.lat) || baseLat + 0.015 + (index % 3) * 0.013;
+        const lng = Number(item.lng) || baseLng + ((index % 2 === 0 ? -1 : 1) * (0.015 + Math.floor(index / 3) * 0.013));
+
+        const marker = L.circleMarker([lat, lng], {
+          radius: 6,
+          fillColor: '#3b82f6',
+          color: '#dbeafe',
+          weight: 1.5,
+          fillOpacity: 0.9
+        }).addTo(targetLayer);
+
+        marker.bindPopup(`
+          <div style="font-size:11px; line-height:1.5; max-width:220px;">
+            <strong>${item.title}</strong><br/>
+            <span>Org: ${item.organization}</span><br/>
+            <span>Contact: ${item.contact}</span><br/>
+            <a href="${item.datasetUrl}" target="_blank" rel="noreferrer">Open data source</a>
+          </div>
+        `);
+      });
     }
 
     function cleanLocation(locName, districtName) {
@@ -1524,6 +1583,14 @@
           </div>
         `}
 
+        <div class="detail-section">Nearby Volunteer / Aid Layer</div>
+        <div id="nearby-aid-panel-${inc.id}">
+          <div class="detail-row">
+            <span class="detail-label">Live lookup</span>
+            <span class="detail-value">Loading nearby agencies…</span>
+          </div>
+        </div>
+
         <div class="action-buttons">
           ${!isArrived ? `
             <button class="btn btn-arrive" onclick="logArrival('${inc.id}')">
@@ -1538,6 +1605,70 @@
       `;
 
       lucide.createIcons();
+      loadNearbyAidLayer(inc);
+    }
+
+    async function loadNearbyAidLayer(inc) {
+      const targetId = `nearby-aid-panel-${inc.id}`;
+      const panel = document.getElementById(targetId);
+      if (!panel) return;
+
+      try {
+        const response = await fetch('/api/nearby/aid/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lat: inc.lat,
+            lng: inc.lng,
+            district: inc.districtId,
+            location: inc.locationName
+          })
+        });
+        const data = await response.json();
+
+        clearNearbyAidMarkers();
+
+        if (!data.success || !data.nearby || data.nearby.length === 0) {
+          panel.innerHTML = `
+            <div class="detail-row">
+              <span class="detail-label">Live response</span>
+              <span class="detail-value">No nearby aid records returned from live HDX search.</span>
+            </div>
+          `;
+          return;
+        }
+
+        drawNearbyAidMarkers(data.nearby, inc, nearbyAidLayer);
+        if (fullMapNearbyAidLayer) {
+          drawNearbyAidMarkers(data.nearby, inc, fullMapNearbyAidLayer);
+        }
+
+        const markers = data.nearby.map(item => `
+          <div class="nearby-aid-card">
+            <div class="nearby-aid-title">${item.title}</div>
+            <div class="nearby-aid-meta"><strong>Organization:</strong> ${item.organization}</div>
+            <div class="nearby-aid-meta"><strong>Contact:</strong> ${item.contact}</div>
+            <div class="nearby-aid-meta"><strong>Live Source:</strong> <a class="detail-link" href="${item.datasetUrl}" target="_blank" rel="noreferrer">Open dataset</a></div>
+            ${item.notes ? `<div class="nearby-aid-meta">${item.notes}</div>` : ''}
+          </div>
+        `).join('');
+
+        panel.innerHTML = `
+          <div class="detail-row">
+            <span class="detail-label">Nearby resources</span>
+            <span class="detail-value">${data.resourceCount} live HDX records</span>
+          </div>
+          ${markers}
+        `;
+      } catch (err) {
+        console.error(err);
+        panel.innerHTML = `
+          <div class="detail-row">
+            <span class="detail-label">Live response</span>
+            <span class="detail-value">Nearby aid lookup is temporarily unavailable.</span>
+          </div>
+        `;
+      }
     }
 
     function renderQueueTable() {
@@ -1663,6 +1794,7 @@
       if (fullmap) return;
       fullmap = L.map('fullmap', { center: [28.1, 84.4], zoom: 7, zoomControl: true, attributionControl: false });
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(fullmap);
+      fullMapNearbyAidLayer = L.layerGroup().addTo(fullmap);
 
       setTimeout(() => {
         fullmap.invalidateSize();
