@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +10,8 @@
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
 
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -32,7 +34,11 @@
       --font: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
       background: var(--bg-main);
@@ -43,9 +49,18 @@
       display: flex;
     }
 
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.4); }
-    ::-webkit-scrollbar-thumb { background: #27354e; border-radius: 3px; }
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #27354e;
+      border-radius: 3px;
+    }
 
     /* SIDEBAR */
     .sidebar {
@@ -86,7 +101,12 @@
       letter-spacing: 0.3px;
     }
 
-    .nav-section { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .nav-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
 
     .nav-item {
       display: flex;
@@ -115,7 +135,9 @@
       font-weight: 600;
     }
 
-    .nav-item.active i { color: var(--color-critical); }
+    .nav-item.active i {
+      color: var(--color-critical);
+    }
 
     .footer-btn {
       width: 100%;
@@ -134,7 +156,9 @@
       transition: background 0.15s;
     }
 
-    .footer-btn:hover { background: #dc2626; }
+    .footer-btn:hover {
+      background: #dc2626;
+    }
 
     /* MAIN CONTENT */
     .main {
@@ -210,7 +234,11 @@
     }
 
     /* VIEWS */
-    .views { flex: 1; display: flex; overflow: hidden; }
+    .views {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
 
     .view {
       flex: 1;
@@ -219,7 +247,9 @@
       overflow: hidden;
     }
 
-    .view.active { display: flex; }
+    .view.active {
+      display: flex;
+    }
 
     /* DASHBOARD: 3-COLUMN LAYOUT */
     .dashboard-grid {
@@ -370,8 +400,18 @@
       flex-shrink: 0;
     }
 
-    .score-num { font-size: 16px; font-weight: 800; line-height: 1; }
-    .score-label { font-size: 9px; font-weight: 700; text-transform: uppercase; margin-top: 2px; }
+    .score-num {
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .score-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
 
     .score-critical {
       background: rgba(239, 68, 68, 0.15);
@@ -452,10 +492,18 @@
       border-bottom: 1px solid rgba(30, 41, 59, 0.5);
     }
 
-    .detail-row:last-child { border: none; }
+    .detail-row:last-child {
+      border: none;
+    }
 
-    .detail-label { color: var(--text-secondary); }
-    .detail-value { font-weight: 600; color: var(--text-primary); }
+    .detail-label {
+      color: var(--text-secondary);
+    }
+
+    .detail-value {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
 
     .detail-link {
       color: #60a5fa;
@@ -468,7 +516,10 @@
       display: inline-block;
     }
 
-    .detail-link:hover { color: #93c5fd; text-decoration: underline; }
+    .detail-link:hover {
+      color: #93c5fd;
+      text-decoration: underline;
+    }
 
     .detail-empty {
       padding: 60px 16px;
@@ -505,14 +556,18 @@
       color: white;
     }
 
-    .btn-arrive:hover { background: #2563eb; }
+    .btn-arrive:hover {
+      background: #2563eb;
+    }
 
     .btn-complete {
       background: var(--color-low);
       color: white;
     }
 
-    .btn-complete:hover { background: #059669; }
+    .btn-complete:hover {
+      background: #059669;
+    }
 
     /* FULLPAGE VIEWS */
     .fullpage {
@@ -565,7 +620,9 @@
       color: var(--text-primary);
     }
 
-    tr:hover { background: rgba(30, 41, 59, 0.4); }
+    tr:hover {
+      background: rgba(30, 41, 59, 0.4);
+    }
 
     /* INGEST MODAL */
     .modal-overlay {
@@ -614,7 +671,9 @@
       font-size: 18px;
     }
 
-    .close-btn:hover { color: white; }
+    .close-btn:hover {
+      color: white;
+    }
 
     .form-group {
       display: flex;
@@ -648,7 +707,9 @@
       border-color: #3b82f6;
     }
 
-    textarea { resize: vertical; }
+    textarea {
+      resize: vertical;
+    }
 
     .submit-btn {
       width: 100%;
@@ -662,7 +723,9 @@
       margin-top: 10px;
     }
 
-    .submit-btn:hover { background: #dc2626; }
+    .submit-btn:hover {
+      background: #dc2626;
+    }
 
     .checkbox-group {
       display: flex;
@@ -670,7 +733,11 @@
       gap: 8px;
     }
 
-    input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
 
     /* CHATBOT */
     .chatbot-toggle {
@@ -707,7 +774,9 @@
       z-index: 2500;
     }
 
-    .chatbot-panel.open { display: flex; }
+    .chatbot-panel.open {
+      display: flex;
+    }
 
     .chatbot-header {
       padding: 12px 14px;
@@ -810,8 +879,35 @@
       gap: 4px;
     }
 
-    .kpi-value { font-size: 20px; font-weight: 800; }
-    .kpi-label { font-size: 10px; color: var(--text-secondary); }
+    .kpi-value {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .kpi-label {
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .spin {
+      animation: spin 1s linear infinite;
+      display: inline-block;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.4; }
+      50% { opacity: 1; }
+      100% { opacity: 0.4; }
+    }
   </style>
 </head>
 
@@ -841,6 +937,11 @@
       <a class="nav-item" id="nav-reports" onclick="switchView('reports')">
         <i data-lucide="file-text" style="width: 16px;"></i>
         Reports
+      </a>
+      <a class="nav-item" id="nav-sync-feeds" onclick="syncLiveFeeds()"
+        style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; color: #60a5fa;">
+        <i data-lucide="refresh-cw" style="width: 16px; color: #60a5fa;"></i>
+        Sync Live Feeds
       </a>
     </div>
 
@@ -895,12 +996,24 @@
         </div>
 
         <div class="dashboard-grid">
-          <!-- PRIORITY QUEUE -->
-          <div class="panel">
-            <div class="panel-header">
-              Priority Queue
+          <!-- LEFT SIDEBAR PANELS -->
+          <div style="display: flex; flex-direction: column; gap: 12px; height: 100%; min-height: 0;">
+            <!-- PRIORITY QUEUE -->
+            <div class="panel" style="flex: 3; min-height: 0;">
+              <div class="panel-header">
+                Priority Queue
+              </div>
+              <div class="queue" id="queue-list"></div>
             </div>
-            <div class="queue" id="queue-list"></div>
+
+            <!-- LIVE FEEDS -->
+            <div class="panel" style="flex: 2; min-height: 0;">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Live External Feeds (GDACS / RSS)</span>
+                <i data-lucide="activity" style="width: 14px; color: #f59e0b; animation: pulse 2s infinite;"></i>
+              </div>
+              <div class="queue" id="live-feeds-list"></div>
+            </div>
           </div>
 
           <!-- MAP -->
@@ -965,7 +1078,9 @@
           <div class="fullpage-card">
             <div class="fullpage-header">
               <span>Raw Disaster Reports & Signals Database</span>
-              <input type="text" id="report-search" placeholder="Search reports..." style="width: 220px; padding: 6px 10px; background: #131926; border: 1px solid var(--border); border-radius: 6px; color: white; font-size: 12px;" onkeyup="filterReports()" />
+              <input type="text" id="report-search" placeholder="Search reports..."
+                style="width: 220px; padding: 6px 10px; background: #131926; border: 1px solid var(--border); border-radius: 6px; color: white; font-size: 12px;"
+                onkeyup="filterReports()" />
             </div>
             <div class="table-container">
               <table id="reports-table">
@@ -1000,7 +1115,8 @@
       <button class="chatbot-close" onclick="toggleChatbot()">×</button>
     </div>
     <div class="chatbot-body" id="chatbot-body">
-      <div class="chat-msg bot">👋 Hello! Ask me for disaster statistics, the highest priority site, or the priority formula.</div>
+      <div class="chat-msg bot">👋 Hello! Ask me for disaster statistics, the highest priority site, or the priority
+        formula.</div>
     </div>
     <div class="chatbot-input-row">
       <input class="chatbot-input" id="chatbot-input" type="text" placeholder="Ask about incidents..." />
@@ -1091,11 +1207,100 @@
       chitwan: { lat: 27.678, lng: 84.432 }
     };
 
+    let liveFeeds = [];
+    let feedMarkers = [];
+
+    async function fetchLiveFeeds() {
+      try {
+        const response = await fetch('/api/feeds/gdacs/');
+        const data = await response.json();
+        if (data.success) {
+          liveFeeds = data.alerts || [];
+          renderLiveFeeds();
+          renderFeedMapMarkers();
+        }
+      } catch (err) {
+        console.error("Error fetching live feeds:", err);
+      }
+    }
+
+    function renderLiveFeeds() {
+      const container = document.getElementById('live-feeds-list');
+      container.innerHTML = '';
+
+      if (liveFeeds.length === 0) {
+        container.innerHTML = '<div class="queue-empty">📡 No external feed alerts found</div>';
+        return;
+      }
+
+      liveFeeds.forEach((feed) => {
+        const row = document.createElement('div');
+        row.className = 'incident-row';
+        row.style.borderLeft = '3px solid #f59e0b';
+        row.style.cursor = 'pointer';
+        row.onclick = () => {
+          if (feed.lat && feed.lng && map) {
+            map.setView([feed.lat, feed.lng], 10);
+          }
+        };
+        
+        const sourceLabel = feed.sourceType === 'sensor' ? '📡 GDACS' : '📰 News RSS';
+        
+        row.innerHTML = `
+          <div class="incident-left">
+            <div class="incident-info">
+              <div class="incident-name" style="color: #f59e0b; font-size: 11px; font-weight: 700;">${feed.title}</div>
+              <div class="incident-location">📍 ${feed.locationName}</div>
+            </div>
+          </div>
+          <div style="font-size: 8px; padding: 2px 4px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 4px; color: #f59e0b; font-weight: 700; flex-shrink: 0;">
+            ${sourceLabel}
+          </div>
+        `;
+        
+        container.appendChild(row);
+      });
+      lucide.createIcons();
+    }
+
+    function renderFeedMapMarkers() {
+      if (!map) return;
+      feedMarkers.forEach(m => m.remove());
+      feedMarkers = [];
+
+      liveFeeds.forEach(feed => {
+        if (!feed.lat || !feed.lng) return;
+
+        const marker = L.circleMarker([feed.lat, feed.lng], {
+          radius: 6,
+          fillColor: '#f59e0b',
+          color: '#fff',
+          weight: 1.5,
+          fillOpacity: 0.8
+        }).addTo(map);
+
+        marker.bindPopup(`
+          <div style="font-size: 11px; color: #f59e0b; font-weight: bold;">
+            ${feed.sourceType === 'sensor' ? '📡 GDACS Sensor Alert' : '📰 RSS News Feed'}
+          </div>
+          <div style="font-size: 10px; margin-top: 4px;">
+            <strong>${feed.title}</strong><br/>
+            ${feed.locationName}<br/>
+            Severity: ${feed.severity}/10
+          </div>
+        `);
+        
+        feedMarkers.push(marker);
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
       initMap();
       fetchIncidents();
+      fetchLiveFeeds();
       setInterval(updateTime, 1000);
+      setInterval(fetchLiveFeeds, 30000); // refresh live feeds every 30 seconds
     });
 
     function updateTime() {
@@ -1402,6 +1607,41 @@
       } catch (err) { console.error(err); }
     }
 
+    async function syncLiveFeeds() {
+      const syncBtn = document.getElementById('nav-sync-feeds');
+      const originalHtml = syncBtn.innerHTML;
+      syncBtn.style.pointerEvents = 'none';
+      syncBtn.innerHTML = `<i data-lucide="refresh-cw" class="spin" style="width: 16px; color: #60a5fa;"></i> Syncing...`;
+      lucide.createIcons();
+
+      try {
+        const response = await fetch('/api/feeds/gdacs/sync/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await response.json();
+        if (data.success) {
+          alert(`Successfully ingested ${data.count} real-time signals!`);
+          fetchIncidents();
+          fetchLiveFeeds();
+          if (document.getElementById('view-reports').classList.contains('active')) {
+            fetchReports();
+          }
+        } else {
+          alert(`Error syncing: ${data.error || 'Unknown error'}`);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to connect to sync API.');
+      } finally {
+        syncBtn.style.pointerEvents = 'auto';
+        syncBtn.innerHTML = originalHtml;
+        lucide.createIcons();
+      }
+    }
+
     function switchView(viewName) {
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.getElementById(`view-${viewName}`).classList.add('active');
@@ -1552,8 +1792,8 @@
 
       signals.forEach(sig => {
         const sourceIcon = sig.sourceType === 'call_center' ? '📞 Call Center' :
-                          sig.sourceType === 'sensor' ? '📡 GDACS' :
-                          sig.sourceType === 'social_media' ? '📱 Social Media' : '📰 News RSS';
+          sig.sourceType === 'sensor' ? '📡 GDACS' :
+            sig.sourceType === 'social_media' ? '📱 Social Media' : '📰 News RSS';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -1580,4 +1820,5 @@
     }
   </script>
 </body>
+
 </html>
