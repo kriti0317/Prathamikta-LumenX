@@ -1,23 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PRATHAMIKTA - Disaster Incident Fusion & Priority Triage System</title>
+  <title>PRATHAMIKTA - Priority Disaster Triage</title>
 
-  <!-- Leaflet CSS for Dark Maps -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <!-- Google Fonts: Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
@@ -26,155 +20,107 @@
       --bg-main: #0b0f17;
       --bg-sidebar: #090c13;
       --bg-card: #131926;
-      --bg-card-hover: #172032;
-      --border-color: #1e2638;
-      --border-focus: #3b82f6;
-
+      --bg-hover: #172032;
+      --border: #1e2638;
       --text-primary: #f8fafc;
       --text-secondary: #94a3b8;
       --text-muted: #64748b;
-
-      --color-life-threat: #ef4444;
+      --color-critical: #ef4444;
       --color-high: #f97316;
       --color-medium: #eab308;
       --color-low: #10b981;
-      --color-purple: #a855f7;
-
-      --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background-color: var(--bg-main);
+      background: var(--bg-main);
       color: var(--text-primary);
-      font-family: var(--font-sans);
+      font-family: var(--font);
       height: 100vh;
       overflow: hidden;
       display: flex;
     }
 
-    ::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
-    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.4); }
+    ::-webkit-scrollbar-thumb { background: #27354e; border-radius: 3px; }
 
-    ::-webkit-scrollbar-track {
-      background: rgba(15, 23, 42, 0.4);
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #27354e;
-      border-radius: 3px;
-    }
-
-    /* Sidebar Styling */
-    sidebar.app-sidebar {
-      width: 230px;
-      background-color: var(--bg-sidebar);
-      border-right: 1px solid var(--border-color);
+    /* SIDEBAR */
+    .sidebar {
+      width: 200px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
+      padding: 16px 12px;
+      gap: 12px;
       flex-shrink: 0;
       height: 100vh;
-      z-index: 100;
     }
 
-    .brand-header {
-      padding: 20px 16px 16px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .brand-logo-row {
+    .logo {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      padding: 8px;
+      margin-bottom: 8px;
     }
 
-    .brand-logo-icon {
-      width: 36px;
-      height: 36px;
+    .logo-icon {
+      width: 32px;
+      height: 32px;
       background: linear-gradient(135deg, #ef4444, #991b1b);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: white;
-      box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
       flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
     }
 
-    .brand-title {
-      font-size: 17px;
+    .logo-text {
+      font-size: 14px;
       font-weight: 800;
-      letter-spacing: 0.5px;
-      color: #ffffff;
-      line-height: 1;
+      letter-spacing: 0.3px;
     }
 
-    .brand-subtitle {
-      font-size: 9.5px;
-      color: var(--text-muted);
-      line-height: 1.35;
-      font-weight: 400;
-    }
-
-    .nav-menu {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      padding: 12px 10px;
-      flex: 1;
-    }
+    .nav-section { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 
     .nav-item {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 14px;
-      border-radius: 8px;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 6px;
       color: var(--text-secondary);
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: all 0.15s;
+      border: 1px solid transparent;
       text-decoration: none;
     }
 
     .nav-item:hover {
-      background: rgba(255, 255, 255, 0.04);
-      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
     }
 
     .nav-item.active {
       background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.35);
-      color: #ffffff;
+      border-color: rgba(239, 68, 68, 0.35);
+      color: white;
       font-weight: 600;
     }
 
-    .nav-item.active i {
-      color: #ef4444;
-    }
+    .nav-item.active i { color: var(--color-critical); }
 
-    .sidebar-footer {
-      padding: 14px;
-      border-top: 1px solid var(--border-color);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .btn-action-primary {
+    .footer-btn {
       width: 100%;
-      padding: 9px 12px;
-      background: #ef4444;
+      padding: 10px 12px;
+      background: var(--color-critical);
       border: none;
       border-radius: 6px;
       color: white;
@@ -184,766 +130,399 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
       transition: background 0.15s;
     }
 
-    .btn-action-primary:hover {
-      background: #dc2626;
-    }
+    .footer-btn:hover { background: #dc2626; }
 
-    .btn-action-secondary {
-      width: 100%;
-      padding: 8px 12px;
-      background: rgba(30, 41, 59, 0.6);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      color: var(--text-secondary);
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .btn-action-secondary:hover {
-      background: rgba(59, 130, 246, 0.2);
-      border-color: var(--border-focus);
-      color: #ffffff;
-    }
-
-    /* Main View Area */
-    .main-wrapper {
+    /* MAIN CONTENT */
+    .main {
       flex: 1;
       display: flex;
       flex-direction: column;
       height: 100vh;
       overflow: hidden;
-      background-color: var(--bg-main);
+      background: var(--bg-main);
     }
 
-    /* Top Header Bar */
-    header.top-header {
-      height: 56px;
-      padding: 0 20px;
-      border-bottom: 1px solid var(--border-color);
+    /* HEADER */
+    .header {
+      height: 50px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
     }
 
-    .header-left-group {
+    .header-left {
       display: flex;
       align-items: center;
       gap: 12px;
+      font-size: 12px;
     }
 
-    .header-alert-pill {
+    .alert-pill {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       background: rgba(239, 68, 68, 0.12);
       border: 1px solid rgba(239, 68, 68, 0.3);
-      padding: 5px 14px;
+      padding: 5px 12px;
       border-radius: 20px;
-      font-size: 12.5px;
       font-weight: 600;
-      color: #ffffff;
     }
 
-    .alert-badge-count {
-      width: 20px;
-      height: 20px;
+    .badge-count {
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
-      background: #ef4444;
-      color: white;
-      font-size: 11px;
-      font-weight: 800;
+      background: var(--color-critical);
       display: flex;
       align-items: center;
       justify-content: center;
-    }
-
-    .header-right-meta {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .header-time-box {
-      font-size: 12.5px;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .npt-tag {
-      background: #1e2638;
-      color: #94a3b8;
-      padding: 1px 6px;
-      border-radius: 4px;
       font-size: 10px;
-      font-weight: 600;
+      font-weight: 800;
     }
 
-    .header-status-online {
+    .header-right {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 12.5px;
+      gap: 16px;
+      font-size: 12px;
       color: var(--text-secondary);
+    }
+
+    .status-online {
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .status-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      background-color: #10b981;
-      box-shadow: 0 0 8px #10b981;
+      background: var(--color-low);
+      box-shadow: 0 0 6px var(--color-low);
     }
 
-    .user-profile-badge {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      padding: 5px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-    }
+    /* VIEWS */
+    .views { flex: 1; display: flex; overflow: hidden; }
 
-    .user-profile-badge .user-icon {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      background: #1e2638;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-secondary);
-    }
-
-    /* VIEW SECTIONS (SPA Navigation) */
-    .view-section {
+    .view {
       flex: 1;
-      padding: 16px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      overflow-y: auto;
-    }
-
-    /* KPI Cards Row */
-    .kpi-row {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 12px;
-    }
-
-    .kpi-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 12px 14px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .kpi-number {
-      font-size: 26px;
-      font-weight: 800;
-      line-height: 1;
-    }
-
-    .kpi-label {
-      font-size: 11px;
-      color: var(--text-secondary);
-      font-weight: 500;
-      line-height: 1.25;
-    }
-
-    /* Middle 3 Columns Section */
-    .middle-grid {
-      display: grid;
-      grid-template-columns: 1.05fr 1.3fr 1.15fr;
-      gap: 14px;
-      min-height: 410px;
-    }
-
-    .grid-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      display: flex;
+      display: none;
       flex-direction: column;
       overflow: hidden;
     }
 
-    .card-header-bar {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border-color);
+    .view.active { display: flex; }
+
+    /* DASHBOARD: 3-COLUMN LAYOUT */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr 1.1fr;
+      gap: 12px;
+      padding: 12px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .panel-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
       font-size: 12px;
       font-weight: 700;
-      letter-spacing: 0.5px;
       color: var(--text-primary);
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
-    .card-header-sub {
-      font-size: 11px;
-      font-weight: 400;
-      color: var(--text-muted);
-    }
-
-    /* Incident Queue List */
-    .queue-list-container {
+    .panel-content {
       flex: 1;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      padding: 12px;
-      overflow-y: auto;
-      max-height: 350px;
     }
 
-    .queue-item {
+    /* INCIDENT QUEUE */
+    .queue {
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .queue-empty {
+      padding: 60px 16px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .incident-row {
       background: rgba(10, 15, 25, 0.6);
-      border: 1px solid var(--border-color);
+      border: 1px solid var(--border);
       border-radius: 6px;
       padding: 10px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
-      transition: all 0.15s ease;
-      position: relative;
+      transition: all 0.15s;
     }
 
-    .queue-item:hover {
-      background: var(--bg-card-hover);
+    .incident-row:hover {
+      background: var(--bg-hover);
       border-color: rgba(59, 130, 246, 0.4);
     }
 
-    .queue-item.selected {
+    .incident-row.selected {
       background: rgba(30, 41, 59, 0.8);
-      border-color: var(--border-focus);
+      border-color: #3b82f6;
     }
 
-    .queue-item-left {
+    .incident-left {
       display: flex;
       align-items: flex-start;
       gap: 10px;
+      flex: 1;
+      min-width: 0;
     }
 
-    .rank-num {
+    .incident-rank {
       font-size: 15px;
       font-weight: 800;
       min-width: 14px;
+      padding-top: 2px;
     }
 
-    .queue-item-meta {
+    .incident-info {
       display: flex;
       flex-direction: column;
       gap: 3px;
+      min-width: 0;
     }
 
-    .queue-item-title {
+    .incident-name {
       font-size: 13px;
       font-weight: 700;
-      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .queue-item-sub {
+    .incident-location {
       font-size: 11px;
       color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .queue-item-icons {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .queue-score-badge {
+    .incident-score {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       padding: 4px 10px;
       border-radius: 6px;
-      min-width: 68px;
+      flex-shrink: 0;
     }
 
-    .badge-score-val {
-      font-size: 18px;
-      font-weight: 800;
-      line-height: 1;
-    }
+    .score-num { font-size: 16px; font-weight: 800; line-height: 1; }
+    .score-label { font-size: 9px; font-weight: 700; text-transform: uppercase; margin-top: 2px; }
 
-    .badge-score-lvl {
-      font-size: 9.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-
-    .badge-very-high {
+    .score-critical {
       background: rgba(239, 68, 68, 0.15);
       border: 1px solid rgba(239, 68, 68, 0.4);
-      color: #ef4444;
+      color: var(--color-critical);
     }
 
-    .badge-high {
+    .score-high {
       background: rgba(249, 115, 22, 0.15);
       border: 1px solid rgba(249, 115, 22, 0.4);
-      color: #f97316;
+      color: var(--color-high);
     }
 
-    .badge-medium {
+    .score-medium {
       background: rgba(234, 179, 8, 0.15);
       border: 1px solid rgba(234, 179, 8, 0.4);
-      color: #eab308;
+      color: var(--color-medium);
     }
 
-    .badge-low {
+    .score-low {
       background: rgba(16, 185, 129, 0.15);
       border: 1px solid rgba(16, 185, 129, 0.4);
-      color: #10b981;
+      color: var(--color-low);
     }
 
-    .card-footer-link {
-      padding: 10px;
-      border-top: 1px solid var(--border-color);
-      text-align: center;
-      font-size: 11.5px;
-      color: var(--border-focus);
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .card-footer-link:hover {
-      text-decoration: underline;
-    }
-
-    /* Map Styling */
-    .map-container-box {
-      flex: 1;
-      position: relative;
-      background: #090d16;
-    }
-
-    #leaflet-map {
+    /* MAP */
+    #map {
       width: 100%;
       height: 100%;
-      min-height: 310px;
-      background: #090d16;
+      background: #0a0d16;
     }
 
-    .map-legend-bar {
-      padding: 8px 14px;
-      border-top: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      font-size: 11px;
-      color: var(--text-secondary);
-      background: var(--bg-card);
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .legend-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-
-    /* Incident Details Card */
-    .details-body {
-      padding: 14px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      flex: 1;
+    /* DETAILS PANEL */
+    .details {
+      padding: 12px 14px;
       overflow-y: auto;
-      max-height: 350px;
+      flex: 1;
     }
 
-    .detail-title-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .detail-inc-name {
-      font-size: 15px;
+    .detail-title {
+      font-size: 14px;
       font-weight: 800;
-      color: #ffffff;
+      margin-bottom: 8px;
     }
 
-    .detail-priority-tag {
-      align-self: flex-start;
+    .detail-priority {
+      display: inline-block;
       background: rgba(239, 68, 68, 0.15);
       border: 1px solid rgba(239, 68, 68, 0.4);
-      color: #ef4444;
+      color: var(--color-critical);
       padding: 2px 8px;
       border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .detail-section {
       font-size: 10.5px;
-      font-weight: 700;
-    }
-
-    .rescuer-status-banner {
-      background: rgba(16, 185, 129, 0.12);
-      border: 1px solid rgba(16, 185, 129, 0.35);
-      color: #10b981;
-      border-radius: 6px;
-      padding: 8px 12px;
-      font-size: 11.5px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .detail-section-title {
-      font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
       color: var(--text-muted);
+      margin: 12px 0 6px;
       letter-spacing: 0.5px;
-      margin-top: 6px;
     }
 
-    .methods-comparison-card {
-      background: rgba(10, 15, 25, 0.7);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .method-row {
+    .detail-row {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      font-size: 11.5px;
-    }
-
-    .method-name {
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
-
-    .method-val {
-      font-weight: 800;
-      color: #ffffff;
-    }
-
-    .reports-list-box {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .report-card-item {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 11px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .report-meta-header {
-      display: flex;
-      justify-content: space-between;
-      color: var(--text-muted);
-      font-size: 10px;
-    }
-
-    .report-text-content {
-      color: var(--text-primary);
-      line-height: 1.3;
-    }
-
-    /* Rescuer Workflow Buttons */
-    .rescuer-actions-row {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 10px;
-      border-top: 1px solid var(--border-color);
-      padding-top: 12px;
-    }
-
-    .btn-rescuers-arrived {
-      width: 100%;
-      padding: 9px 12px;
-      background: #3b82f6;
-      border: none;
-      color: white;
-      border-radius: 6px;
       font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: background 0.15s;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(30, 41, 59, 0.5);
     }
 
-    .btn-rescuers-arrived:hover {
-      background: #2563eb;
-    }
+    .detail-row:last-child { border: none; }
 
-    .btn-resolve-completed {
-      width: 100%;
-      padding: 9px 12px;
-      background: #10b981;
-      border: none;
-      color: white;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: background 0.15s;
-    }
+    .detail-label { color: var(--text-secondary); }
+    .detail-value { font-weight: 600; color: var(--text-primary); }
 
-    .btn-resolve-completed:hover {
-      background: #059669;
-    }
-
-    /* Bottom 4 Columns Section */
-    .bottom-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-    }
-
-    .source-overview-list {
-      padding: 12px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      flex: 1;
-    }
-
-    .source-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-    }
-
-    .source-row-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--text-secondary);
-    }
-
-    .source-val-box {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .source-num {
-      font-size: 16px;
-      font-weight: 800;
-      color: #ffffff;
-    }
-
-    .source-pct-up {
-      color: #10b981;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    /* Priority Score Breakdown Chart */
-    .breakdown-body {
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      flex: 1;
-    }
-
-    .gauge-and-stats {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .donut-gauge-wrapper {
-      position: relative;
-      width: 80px;
-      height: 80px;
-      flex-shrink: 0;
-    }
-
-    .gauge-center-text {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+    .detail-empty {
+      padding: 60px 16px;
       text-align: center;
-    }
-
-    .gauge-num {
-      font-size: 20px;
-      font-weight: 800;
-      line-height: 1;
-      color: #ffffff;
-    }
-
-    .gauge-sub {
-      font-size: 8.5px;
       color: var(--text-muted);
-      line-height: 1.1;
+      font-size: 13px;
     }
 
-    .criteria-list {
+    .action-buttons {
       display: flex;
-      flex-direction: column;
-      gap: 4px;
-      flex: 1;
-      font-size: 10.5px;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
     }
 
-    .crit-item {
+    .btn {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .btn-arrive {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn-arrive:hover { background: #2563eb; }
+
+    .btn-complete {
+      background: var(--color-low);
+      color: white;
+    }
+
+    .btn-complete:hover { background: #059669; }
+
+    /* FULLPAGE VIEWS */
+    .fullpage {
+      padding: 12px;
+      overflow-y: auto;
+    }
+
+    .fullpage-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      height: 100%;
+    }
+
+    .fullpage-header {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
-    .crit-label {
-      display: flex;
-      align-items: center;
-      gap: 5px;
+    .table-container {
+      overflow-x: auto;
+      height: 100%;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th {
+      background: #1e293b;
       color: var(--text-secondary);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 10px;
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
     }
 
-    .crit-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-    }
-
-    .crit-val {
-      font-weight: 600;
+    td {
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
       color: var(--text-primary);
     }
 
-    .override-alert-banner {
-      background: rgba(239, 68, 68, 0.12);
-      border: 1px solid rgba(239, 68, 68, 0.35);
-      color: #ef4444;
-      border-radius: 6px;
-      padding: 6px 8px;
-      font-size: 10.5px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: auto;
-    }
+    tr:hover { background: rgba(30, 41, 59, 0.4); }
 
-    /* Data Sources Status List */
-    .status-list {
-      padding: 10px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      flex: 1;
-    }
-
-    .status-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 11.5px;
-    }
-
-    .status-badge-online {
-      color: #10b981;
-      font-size: 11px;
-      font-weight: 600;
-    }
-
-    /* Activity Log List */
-    .activity-list {
-      padding: 10px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      flex: 1;
-    }
-
-    .log-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      font-size: 11px;
-    }
-
-    .log-time {
-      color: var(--text-muted);
-      font-weight: 600;
-      min-width: 32px;
-    }
-
-    .log-desc {
-      color: var(--text-secondary);
-      line-height: 1.25;
-    }
-
-    /* Footer Bar */
-    footer.app-footer {
-      height: 32px;
-      padding: 0 20px;
-      background: var(--bg-sidebar);
-      border-top: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 11px;
-      color: var(--text-muted);
-      flex-shrink: 0;
-    }
-
-    /* Drawer Overlay */
-    .drawer-overlay {
+    /* INGEST MODAL */
+    .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
@@ -956,37 +535,40 @@
       justify-content: flex-end;
     }
 
-    .drawer-content {
-      width: 440px;
+    .modal-content {
+      width: 420px;
       height: 100%;
       background: var(--bg-sidebar);
-      border-left: 1px solid var(--border-color);
+      border-left: 1px solid var(--border);
       display: flex;
       flex-direction: column;
       padding: 20px;
-      gap: 16px;
+      gap: 14px;
       overflow-y: auto;
     }
 
-    .drawer-header {
+    .modal-header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid var(--border-color);
+      align-items: center;
+      border-bottom: 1px solid var(--border);
       padding-bottom: 12px;
     }
 
-    .btn-close-drawer {
-      background: transparent;
+    .modal-header h3 {
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .close-btn {
+      background: none;
       border: none;
       color: var(--text-muted);
       cursor: pointer;
-      font-size: 20px;
+      font-size: 18px;
     }
 
-    .btn-close-drawer:hover {
-      color: white;
-    }
+    .close-btn:hover { color: white; }
 
     .form-group {
       display: flex;
@@ -1000,717 +582,392 @@
       font-weight: 600;
     }
 
-    .form-input,
-    .form-select,
-    .form-textarea {
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
       background: #131926;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 8px 12px;
-      color: white;
-      font-size: 12.5px;
-      outline: none;
-    }
-
-    .form-input:focus,
-    .form-select:focus,
-    .form-textarea:focus {
-      border-color: var(--border-focus);
-    }
-
-    /* FLOATING CHATBOT WIDGET STYLES */
-    .chatbot-fab {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5);
-      cursor: pointer;
-      z-index: 1500;
-      transition: transform 0.2s;
-    }
-
-    .chatbot-fab:hover {
-      transform: scale(1.08);
-    }
-
-    .chatbot-window {
-      position: fixed;
-      bottom: 86px;
-      right: 24px;
-      width: 380px;
-      height: 480px;
-      background: #0f172a;
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-      display: none;
-      flex-direction: column;
-      z-index: 1500;
-      overflow: hidden;
-    }
-
-    .chat-header {
-      padding: 12px 16px;
-      background: #1e293b;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .chat-body {
-      flex: 1;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      overflow-y: auto;
-      font-size: 12px;
-    }
-
-    .chat-msg {
-      max-width: 85%;
-      padding: 8px 12px;
-      border-radius: 8px;
-      line-height: 1.4;
-      white-space: pre-wrap;
-    }
-
-    .chat-msg.bot {
-      background: #1e293b;
-      color: #f8fafc;
-      align-self: flex-start;
-      border-bottom-left-radius: 2px;
-    }
-
-    .chat-msg.user {
-      background: #3b82f6;
-      color: white;
-      align-self: flex-end;
-      border-bottom-right-radius: 2px;
-    }
-
-    .chat-pills-row {
-      display: flex;
-      gap: 6px;
-      padding: 6px 12px;
-      background: #090d16;
-      overflow-x: auto;
-      border-top: 1px solid var(--border-color);
-    }
-
-    .chat-pill {
-      background: #1e293b;
-      color: #38bdf8;
-      border: 1px solid #334155;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 10.5px;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .chat-pill:hover {
-      background: #334155;
-      color: white;
-    }
-
-    .chat-footer {
-      padding: 10px;
-      border-top: 1px solid var(--border-color);
-      display: flex;
-      gap: 8px;
-      background: #0f172a;
-    }
-
-    .chat-input {
-      flex: 1;
-      background: #1e293b;
-      border: 1px solid var(--border-color);
+      border: 1px solid var(--border);
       border-radius: 6px;
       padding: 8px 12px;
       color: white;
       font-size: 12px;
+      font-family: var(--font);
       outline: none;
     }
 
-    /* FULLPAGE TABLES & SECTIONS */
-    .data-table {
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #3b82f6;
+    }
+
+    textarea { resize: vertical; }
+
+    .submit-btn {
       width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-
-    .data-table th {
-      background: #1e293b;
-      color: var(--text-secondary);
+      padding: 10px;
+      background: var(--color-critical);
+      border: none;
+      border-radius: 6px;
+      color: white;
       font-weight: 700;
-      text-transform: uppercase;
-      font-size: 10.5px;
-      padding: 10px;
-      text-align: left;
-      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      margin-top: 10px;
     }
 
-    .data-table td {
-      padding: 10px;
-      border-bottom: 1px solid var(--border-color);
-      color: var(--text-primary);
+    .submit-btn:hover { background: #dc2626; }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .data-table tr:hover {
-      background: rgba(30, 41, 59, 0.4);
+    input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+
+    /* KPI CARDS */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
     }
+
+    .kpi-card {
+      background: rgba(10, 15, 25, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .kpi-value { font-size: 20px; font-weight: 800; }
+    .kpi-label { font-size: 10px; color: var(--text-secondary); }
   </style>
 </head>
 
 <body>
-
-  <!-- Left Sidebar -->
-  <sidebar class="app-sidebar">
-    <div class="brand-header">
-      <div class="brand-logo-row">
-        <div class="brand-logo-icon">
-          <i data-lucide="shield-alert" style="width: 20px; height: 20px;"></i>
-        </div>
-        <span class="brand-title">PRATHAMIKTA</span>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">
+        <i data-lucide="shield-alert" style="width: 18px; height: 18px;"></i>
       </div>
-      <p class="brand-subtitle">Multi-Source Disaster Incident Fusion & Priority Triage System</p>
+      <div class="logo-text">PRATHAMIKTA</div>
     </div>
 
-    <nav class="nav-menu">
+    <div class="nav-section">
       <a class="nav-item active" id="nav-dashboard" onclick="switchView('dashboard')">
-        <i data-lucide="layout-dashboard" style="width: 18px;"></i>
+        <i data-lucide="layout-dashboard" style="width: 16px;"></i>
         Dashboard
       </a>
-      <a class="nav-item" id="nav-incidents" onclick="switchView('incidents')">
-        <i data-lucide="alert-circle" style="width: 18px;"></i>
-        Incidents Queue
+      <a class="nav-item" id="nav-queue" onclick="switchView('queue')">
+        <i data-lucide="list" style="width: 16px;"></i>
+        All Incidents
       </a>
-      <a class="nav-item" id="nav-live-map" onclick="switchView('live-map')">
-        <i data-lucide="map" style="width: 18px;"></i>
-        Live Map
-      </a>
-      <a class="nav-item" id="nav-data-sources" onclick="switchView('data-sources')">
-        <i data-lucide="radio" style="width: 18px;"></i>
-        Data Sources
+      <a class="nav-item" id="nav-fullmap" onclick="switchView('fullmap')">
+        <i data-lucide="map" style="width: 16px;"></i>
+        Full Map
       </a>
       <a class="nav-item" id="nav-reports" onclick="switchView('reports')">
-        <i data-lucide="file-text" style="width: 18px;"></i>
+        <i data-lucide="file-text" style="width: 16px;"></i>
         Reports
       </a>
-      <a class="nav-item" id="nav-alerts" onclick="switchView('alerts')">
-        <i data-lucide="bell" style="width: 18px;"></i>
-        Alerts
-      </a>
-      <a class="nav-item" onclick="openDrawer('tuning')">
-        <i data-lucide="settings" style="width: 18px;"></i>
-        Settings & AI Key
-      </a>
-    </nav>
-
-    <div class="sidebar-footer">
-      <button class="btn-action-primary" onclick="openIngestModal()">
-        <i data-lucide="plus-circle" style="width: 15px;"></i>
-        Ingest Real-Time Signal
-      </button>
-      <button class="btn-action-secondary" onclick="openDrawer('tuning')">
-        <i data-lucide="sliders" style="width: 14px;"></i>
-        System & AI Settings
-      </button>
     </div>
-  </sidebar>
 
-  <!-- Main Content Wrapper -->
-  <div class="main-wrapper">
-    <!-- Top Header -->
-    <header class="top-header">
-      <div class="header-left-group">
-        <div class="header-alert-pill">
-          <div class="alert-badge-count" id="active-incidents-count">3</div>
-          <span>Active Priority Incidents</span>
+    <button class="footer-btn" onclick="openIngestModal()">
+      <i data-lucide="plus" style="width: 14px;"></i>
+      Ingest Signal
+    </button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-left">
+        <div class="alert-pill">
+          <div class="badge-count" id="alert-count">3</div>
+          <span>Active Incidents</span>
         </div>
       </div>
 
-      <div class="header-right-meta">
-        <div class="header-time-box">
-          <span style="color: #ffffff; font-weight: 600;" id="live-time-clock">14:35</span>
-          <span class="npt-tag">NPT</span>
-          <span id="live-date-clock">May 10, 2025</span>
-        </div>
-
-        <div class="header-status-online">
+      <div class="header-right">
+        <span id="live-time">14:35</span>
+        <span style="font-size: 10px; background: #1e2638; padding: 2px 6px; border-radius: 3px;">NPT</span>
+        <div class="status-online">
           <div class="status-dot"></div>
-          <span style="color: #ffffff; font-weight: 500;">System Online</span>
-        </div>
-
-        <div class="user-profile-badge">
-          <div class="user-icon">
-            <i data-lucide="user" style="width: 14px;"></i>
-          </div>
-          <div style="display: flex; flex-direction: column; text-align: left;">
-            <span style="color: #ffffff; font-weight: 600; font-size: 11.5px; line-height: 1;">Dispatcher</span>
-            <span style="color: var(--text-muted); font-size: 10px; line-height: 1.2;">DEOC Kathmandu</span>
-          </div>
-          <i data-lucide="chevron-down" style="width: 14px; color: var(--text-muted); margin-left: 4px;"></i>
+          <span>System Online</span>
         </div>
       </div>
-    </header>
+    </div>
 
-    <!-- VIEW 1: DASHBOARD (Default) -->
-    <div class="view-section" id="view-dashboard">
-      <!-- 6 KPI Row -->
-      <div class="kpi-row">
-        <div class="kpi-card">
-          <span class="kpi-number" id="kpi-high" style="color: var(--color-life-threat);">12</span>
-          <div class="kpi-label">High Priority<br />Incidents</div>
-        </div>
-        <div class="kpi-card">
-          <span class="kpi-number" id="kpi-med" style="color: var(--color-high);">23</span>
-          <div class="kpi-label">Medium Priority<br />Incidents</div>
-        </div>
-        <div class="kpi-card">
-          <span class="kpi-number" id="kpi-low" style="color: var(--color-medium);">15</span>
-          <div class="kpi-label">Low Priority<br />Incidents</div>
-        </div>
-        <div class="kpi-card">
-          <span class="kpi-number" id="kpi-total" style="color: #ffffff;">50</span>
-          <div class="kpi-label">Total Incidents<br />(Last 24h)</div>
-        </div>
-        <div class="kpi-card">
-          <span class="kpi-number" style="color: var(--color-low);">87%</span>
-          <div class="kpi-label">Data Sources<br />Online</div>
-        </div>
-        <div class="kpi-card">
-          <span class="kpi-number" id="kpi-rescuers" style="color: var(--color-purple);">4</span>
-          <div class="kpi-label">Rescuer Teams<br />Arrived On-Site</div>
-        </div>
-      </div>
-
-      <!-- Middle 3 Columns Grid -->
-      <div class="middle-grid">
-        <!-- Col 1: INCIDENT QUEUE -->
-        <div class="grid-card">
-          <div class="card-header-bar">
-            <span>PRIORITY DISASTER QUEUE <span class="card-header-sub">(Highest to Lowest)</span></span>
+    <!-- VIEWS -->
+    <div class="views">
+      <!-- DASHBOARD VIEW -->
+      <div class="view active" id="view-dashboard">
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-value" id="kpi-critical" style="color: var(--color-critical);">0</div>
+            <div class="kpi-label">Critical</div>
           </div>
-          <div class="queue-list-container" id="queue-list"></div>
-          <a class="card-footer-link" onclick="openIngestModal()">+ Ingest New Real-Time Signal &rarr;</a>
-        </div>
-
-        <!-- Col 2: LIVE MAP WIDGET -->
-        <div class="grid-card">
-          <div class="card-header-bar">
-            <span>LIVE DISASTER INCIDENT MAP <span class="card-header-sub">(Live Locations)</span></span>
+          <div class="kpi-card">
+            <div class="kpi-value" id="kpi-high" style="color: var(--color-high);">0</div>
+            <div class="kpi-label">High Priority</div>
           </div>
-          <div class="map-container-box">
-            <div id="leaflet-map"></div>
+          <div class="kpi-card">
+            <div class="kpi-value" id="kpi-medium" style="color: var(--color-medium);">0</div>
+            <div class="kpi-label">Medium</div>
           </div>
-          <div class="map-legend-bar">
-            <div class="legend-item"><div class="legend-dot" style="background-color: var(--color-life-threat);"></div> Critical</div>
-            <div class="legend-item"><div class="legend-dot" style="background-color: var(--color-high);"></div> High</div>
-            <div class="legend-item"><div class="legend-dot" style="background-color: var(--color-medium);"></div> Medium</div>
-            <div class="legend-item"><div class="legend-dot" style="background-color: #3b82f6;"></div> 🚑 Rescuers Arrived</div>
+          <div class="kpi-card">
+            <div class="kpi-value" id="kpi-total" style="color: white;">0</div>
+            <div class="kpi-label">Total</div>
           </div>
         </div>
 
-        <!-- Col 3: INCIDENT DETAILS -->
-        <div class="grid-card">
-          <div class="card-header-bar">
-            <span>INCIDENT DETAILS & RESCUER WORKFLOW</span>
-          </div>
-          <div class="details-body" id="incident-details-body"></div>
-        </div>
-      </div>
-
-      <!-- Bottom 4 Columns Grid -->
-      <div class="bottom-grid">
-        <div class="grid-card">
-          <div class="card-header-bar">
-            <span>REAL-TIME SOURCE FEEDS <span class="card-header-sub">(4 Sources)</span></span>
-          </div>
-          <div class="source-overview-list">
-            <div class="source-row">
-              <div class="source-row-left"><i data-lucide="headset" style="width:15px;"></i> 📞 Disaster Calls</div>
-              <div class="source-val-box"><span class="source-num">128</span><span class="source-pct-up">&blacktriangle; 15%</span></div>
+        <div class="dashboard-grid">
+          <!-- PRIORITY QUEUE -->
+          <div class="panel">
+            <div class="panel-header">
+              Priority Queue
             </div>
-            <div class="source-row">
-              <div class="source-row-left"><i data-lucide="target" style="width:15px;"></i> 📡 GDACS Sensors</div>
-              <div class="source-val-box"><span class="source-num">73</span><span class="source-pct-up">&blacktriangle; 8%</span></div>
-            </div>
-            <div class="source-row">
-              <div class="source-row-left"><i data-lucide="share-2" style="width:15px;"></i> 📱 Social Media</div>
-              <div class="source-val-box"><span class="source-num">256</span><span class="source-pct-up">&blacktriangle; 23%</span></div>
-            </div>
-            <div class="source-row">
-              <div class="source-row-left"><i data-lucide="newspaper" style="width:15px;"></i> 📰 News RSS Feeds</div>
-              <div class="source-val-box"><span class="source-num">42</span><span class="source-pct-up">&blacktriangle; 12%</span></div>
+            <div class="queue" id="queue-list"></div>
+          </div>
+
+          <!-- MAP -->
+          <div class="panel">
+            <div class="panel-header">Live Locations</div>
+            <div id="map" style="flex: 1;"></div>
+          </div>
+
+          <!-- DETAILS -->
+          <div class="panel">
+            <div class="panel-header">Details</div>
+            <div class="details" id="details-panel">
+              <div class="detail-empty">Select an incident to view details</div>
             </div>
           </div>
         </div>
 
-        <div class="grid-card">
-          <div class="card-header-bar">
-            <span>PRIORITY SCORE BREAKDOWN <span class="card-header-sub">(Selected Event)</span></span>
-          </div>
-          <div class="breakdown-body" id="breakdown-body-container">
-            <div class="gauge-and-stats">
-              <div class="donut-gauge-wrapper">
-                <svg width="80" height="80" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="#1e2638" stroke-width="12" />
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="#ef4444" stroke-width="12" stroke-dasharray="70 251.2" stroke-dashoffset="0" transform="rotate(-90 50 50)" />
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="#f97316" stroke-width="12" stroke-dasharray="55 251.2" stroke-dashoffset="-75" transform="rotate(-90 50 50)" />
-                </svg>
-                <div class="gauge-center-text">
-                  <div class="gauge-num" id="gauge-score-val">98</div>
-                  <div class="gauge-sub">Total Score</div>
-                </div>
+        <!-- REAL-TIME SOURCE FEEDS -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 12px; border-top: 1px solid var(--border);">
+          <div class="panel">
+            <div class="panel-header">📞 Disaster Calls</div>
+            <div style="padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 20px; font-weight: 800; color: white;">128</div>
+                <div style="font-size: 10px; color: var(--text-secondary);">reports</div>
               </div>
+              <div style="color: #10b981; font-size: 12px; font-weight: 700;">▲ 15%</div>
+            </div>
+          </div>
 
-              <div class="criteria-list">
-                <div class="crit-item"><span class="crit-label"><div class="crit-dot" style="background:#ef4444;"></div> Severity (x3)</span><span class="crit-val">27/30</span></div>
-                <div class="crit-item"><span class="crit-label"><div class="crit-dot" style="background:#f97316;"></div> Corroboration (x2)</span><span class="crit-val">10/20</span></div>
-                <div class="crit-item"><span class="crit-label"><div class="crit-dot" style="background:#eab308;"></div> Source Trust (x2)</span><span class="crit-val">18/20</span></div>
+          <div class="panel">
+            <div class="panel-header">📡 GDACS Sensors</div>
+            <div style="padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 20px; font-weight: 800; color: white;">73</div>
+                <div style="font-size: 10px; color: var(--text-secondary);">reports</div>
               </div>
-            </div>
-            <div class="override-alert-banner">
-              <i data-lucide="alert-triangle" style="width: 14px; flex-shrink: 0;"></i>
-              <span>Hard-floor override applied (Life-threat detected)</span>
+              <div style="color: #10b981; font-size: 12px; font-weight: 700;">▲ 8%</div>
             </div>
           </div>
-        </div>
 
-        <div class="grid-card">
-          <div class="card-header-bar"><span>DATA SOURCES STATUS</span></div>
-          <div class="status-list">
-            <div class="status-row"><span>📞 Call Center System</span><span class="status-badge-online">Online</span></div>
-            <div class="status-row"><span>📡 GDACS River Gauge Sensors</span><span class="status-badge-online">Online</span></div>
-            <div class="status-row"><span>📡 Rainfall Sensor Network</span><span class="status-badge-online">Online</span></div>
-            <div class="status-row"><span>📱 Social Media Feed</span><span class="status-badge-online">Online</span></div>
-            <div class="status-row"><span>📰 News RSS Feeds</span><span class="status-badge-online">Online</span></div>
+          <div class="panel">
+            <div class="panel-header">📱 Social Media</div>
+            <div style="padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 20px; font-weight: 800; color: white;">256</div>
+                <div style="font-size: 10px; color: var(--text-secondary);">reports</div>
+              </div>
+              <div style="color: #10b981; font-size: 12px; font-weight: 700;">▲ 23%</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">📰 News RSS Feeds</div>
+            <div style="padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 20px; font-weight: 800; color: white;">42</div>
+                <div style="font-size: 10px; color: var(--text-secondary);">reports</div>
+              </div>
+              <div style="color: #10b981; font-size: 12px; font-weight: 700;">▲ 12%</div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div class="grid-card">
-          <div class="card-header-bar"><span>RECENT ACTIVITY LOG</span></div>
-          <div class="activity-list" id="activity-log-list">
-            <div class="log-item"><span class="log-time">14:34</span><span class="log-desc">New report from Call Center - Khokana</span></div>
-            <div class="log-item"><span class="log-time">14:33</span><span class="log-desc">GDACS sensor alert - Bagmati at Khokana</span></div>
-            <div class="log-item"><span class="log-time">14:31</span><span class="log-desc">Social media post matched - flooding</span></div>
+      <!-- ALL INCIDENTS QUEUE VIEW -->
+      <div class="view" id="view-queue">
+        <div class="fullpage">
+          <div class="fullpage-card">
+            <div class="fullpage-header">
+              <span>All Disaster Incidents</span>
+              <button class="footer-btn" style="width: auto;" onclick="openIngestModal()">
+                <i data-lucide="plus" style="width: 14px;"></i> Add
+              </button>
+            </div>
+            <div class="table-container">
+              <table id="queue-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Hazard & Location</th>
+                    <th>Score</th>
+                    <th>Level</th>
+                    <th>Reports</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="queue-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FULL MAP VIEW -->
+      <div class="view" id="view-fullmap">
+        <div style="padding: 12px; height: 100%;">
+          <div class="fullpage-card" style="border-radius: 8px;">
+            <div id="fullmap"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORTS VIEW -->
+      <div class="view" id="view-reports">
+        <div class="fullpage">
+          <div class="fullpage-card">
+            <div class="fullpage-header">
+              <span>Raw Disaster Reports & Signals Database</span>
+              <input type="text" id="report-search" placeholder="Search reports..." style="width: 220px; padding: 6px 10px; background: #131926; border: 1px solid var(--border); border-radius: 6px; color: white; font-size: 12px;" onkeyup="filterReports()" />
+            </div>
+            <div class="table-container">
+              <table id="reports-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Source</th>
+                    <th>Hazard</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Severity</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody id="reports-tbody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- VIEW 2: INCIDENTS QUEUE VIEW -->
-    <div class="view-section" id="view-incidents" style="display:none;">
-      <div class="grid-card" style="flex:1;">
-        <div class="card-header-bar">
-          <span style="font-size:15px; font-weight:800;">PRIORITY DISASTER INCIDENTS TRIAGE TABLE</span>
-          <button class="btn-action-primary" style="width:auto; padding:6px 12px;" onclick="openIngestModal()">+ Ingest Signal</button>
-        </div>
-        <div style="padding:16px; overflow-y:auto; flex:1;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Disaster Event & Location</th>
-                <th>Method i (Formula)</th>
-                <th>Method ii (AI Suggestion)</th>
-                <th>Corroborations</th>
-                <th>Rescuer Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="incidents-table-body">
-              <!-- Populated by JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- VIEW 3: LIVE MAP FULLSCREEN VIEW -->
-    <div class="view-section" id="view-live-map" style="display:none;">
-      <div class="grid-card" style="flex:1; position:relative;">
-        <div class="card-header-bar">
-          <span style="font-size:15px; font-weight:800;">EXPANDED LIVE DISASTER INCIDENT MAP (NEPAL & GDACS)</span>
-          <span class="status-badge-online">🟢 Live Markers Active</span>
-        </div>
-        <div style="flex:1; position:relative;">
-          <div id="full-leaflet-map" style="width:100%; height:100%; min-height:550px;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- VIEW 4: DATA SOURCES & GDACS MONITOR VIEW -->
-    <div class="view-section" id="view-data-sources" style="display:none;">
-      <div class="grid-card" style="flex:1;">
-        <div class="card-header-bar">
-          <span style="font-size:15px; font-weight:800;">REAL-TIME DATA SOURCES & GDACS MONITORING</span>
-          <button class="btn-action-primary" style="width:auto; padding:8px 16px;" onclick="triggerGdacsLiveSync()">
-            <i data-lucide="refresh-cw" style="width:14px;"></i> 🔄 Sync Live GDACS & RSS Feeds Now
-          </button>
-        </div>
-        <div style="padding:20px; display:grid; grid-template-columns: 1fr 1fr; gap:16px;" id="data-sources-grid">
-          <!-- Populated by JS -->
-        </div>
-      </div>
-    </div>
-
-    <!-- VIEW 5: REPORTS & RAW SIGNALS VIEW -->
-    <div class="view-section" id="view-reports" style="display:none;">
-      <div class="grid-card" style="flex:1;">
-        <div class="card-header-bar">
-          <span style="font-size:15px; font-weight:800;">RAW DISASTER REPORTS & SIGNALS DATABASE</span>
-          <input type="text" class="form-input" id="report-search-input" placeholder="Search reports..." style="width:240px; padding:4px 10px;" onkeyup="filterReportsTable()" />
-        </div>
-        <div style="padding:16px; overflow-y:auto; flex:1;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Source Channel</th>
-                <th>Hazard</th>
-                <th>Location</th>
-                <th>Report Text / Payload Description</th>
-                <th>Severity</th>
-                <th>Timestamp</th>
-              </tr>
-            </thead>
-            <tbody id="reports-table-body">
-              <!-- Populated by JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- VIEW 6: ALERTS VIEW -->
-    <div class="view-section" id="view-alerts" style="display:none;">
-      <div class="grid-card" style="flex:1;">
-        <div class="card-header-bar">
-          <span style="font-size:15px; font-weight:800;">DISASTER ALERTS & GDACS BROADCASTS</span>
-        </div>
-        <div style="padding:20px; display:flex; flex-direction:column; gap:14px;" id="alerts-view-content">
-          <!-- Populated by JS -->
-        </div>
-      </div>
-    </div>
-
-    <!-- App Footer -->
-    <footer class="app-footer">
-      <div style="display:flex; gap:16px;">
-        <span>Version: 1.0.0</span>
-        <span>Environment: Production</span>
-        <span>Uptime: 99.2%</span>
-      </div>
-      <div>
-        <span>PRATHAMIKTA - Supporting Faster Decisions. Saving Lives.</span>
-      </div>
-    </footer>
   </div>
 
-  <!-- FLOATING CHATBOT WIDGET BUTTON -->
-  <div class="chatbot-fab" onclick="toggleChatWindow()">
-    <i data-lucide="bot" style="width: 26px; height: 26px;"></i>
-  </div>
-
-  <!-- FLOATING CHATBOT WINDOW -->
-  <div class="chatbot-window" id="chatbot-window">
-    <div class="chat-header">
-      <div style="display:flex; align-items:center; gap:8px;">
-        <i data-lucide="bot" style="width: 18px; color: #38bdf8;"></i>
-        <strong style="font-size:13px; color:white;">PRATHAMIKTA AI Assistant</strong>
-      </div>
-      <button style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:18px;" onclick="toggleChatWindow()">&times;</button>
-    </div>
-
-    <div class="chat-body" id="chat-messages-box">
-      <div class="chat-msg bot">
-        👋 Hello! I am the PRATHAMIKTA EOC AI Chatbot Assistant. Ask me about active disaster statistics, highest priority events, or triage scoring methods!
-      </div>
-    </div>
-
-    <div class="chat-pills-row">
-      <button class="chat-pill" onclick="sendQuickChat('Show disaster statistics')">📊 Statistics</button>
-      <button class="chat-pill" onclick="sendQuickChat('What is the highest priority disaster?')">🚨 Highest Priority</button>
-      <button class="chat-pill" onclick="sendQuickChat('Explain priority sorting methods')">🧠 2 Sorting Methods</button>
-      <button class="chat-pill" onclick="sendQuickChat('List all active disaster sites')">📋 List All</button>
-    </div>
-
-    <div class="chat-footer">
-      <input type="text" class="chat-input" id="chat-input-field" placeholder="Ask AI Assistant about statistics or events..." onkeypress="handleChatKeyPress(event)" />
-      <button class="btn-action-primary" style="width:auto; padding:6px 12px;" onclick="sendChatMessage()">
-        <i data-lucide="send" style="width:14px;"></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- Real-Time Signal Ingest Modal -->
-  <div class="drawer-overlay" id="ingest-modal">
-    <div class="drawer-content" style="width: 460px;">
-      <div class="drawer-header">
-        <h3 style="font-size: 15px; font-weight: 800; color: white;">➕ Ingest Real-Time Disaster Signal</h3>
-        <button class="btn-close-drawer" onclick="closeIngestModal()">&times;</button>
+  <!-- INGEST MODAL -->
+  <div class="modal-overlay" id="ingest-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>➕ Ingest Disaster Signal</h3>
+        <button class="close-btn" onclick="closeIngestModal()">&times;</button>
       </div>
 
-      <form id="ingest-signal-form" onsubmit="submitRealTimeSignal(event)" style="display:flex; flex-direction:column; gap:12px;">
+      <form id="ingest-form" onsubmit="submitSignal(event)">
         <div class="form-group">
-          <label>1. Signal Source Category</label>
-          <select class="form-select" id="sig-source-type">
-            <option value="sensor">📡 GDACS Sensor Alert (Global Disaster Alert & Coordination System)</option>
-            <option value="call_center">📞 Disaster Phone Call (Call Center 911/115)</option>
-            <option value="social_media">📱 Social Media Post (X/Twitter / Facebook / Telegram)</option>
-            <option value="news">📰 RSS News Feed / Media Crawl</option>
+          <label>Source</label>
+          <select id="source-type" required>
+            <option value="call_center">📞 Disaster Call (911/115)</option>
+            <option value="sensor">📡 GDACS Sensor Alert</option>
+            <option value="social_media">📱 Social Media Post</option>
+            <option value="news">📰 News RSS Feed</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label>2. Disaster Hazard Type</label>
-          <select class="form-select" id="sig-disaster-type">
+          <label>Hazard Type</label>
+          <select id="hazard-type" required>
             <option value="Flood">Flood</option>
             <option value="Landslide">Landslide</option>
-            <option value="Earthquake">Earthquake / Structural Collapse</option>
-            <option value="Heavy Rainfall">Heavy Rainfall Alert</option>
-            <option value="Fire">Fire / Explosion</option>
+            <option value="Earthquake">Earthquake</option>
+            <option value="Fire">Fire</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label>3. Location Name / Address</label>
-          <input type="text" class="form-input" id="sig-location-name" placeholder="e.g. Khokana, Lalitpur" required />
+          <label>Location</label>
+          <input type="text" id="location" placeholder="e.g. Khokana, Lalitpur" required />
         </div>
 
         <div class="form-group">
-          <label>4. District</label>
-          <select class="form-select" id="sig-district">
+          <label>District</label>
+          <select id="district" required>
             <option value="lalitpur">Lalitpur</option>
             <option value="kathmandu">Kathmandu</option>
             <option value="bhaktapur">Bhaktapur</option>
-            <option value="sindhupalchok">Sindhupalchok</option>
             <option value="kaski">Kaski (Pokhara)</option>
             <option value="chitwan">Chitwan</option>
-            <option value="jajarkot">Jajarkot</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label>5. Signal Content / Description</label>
-          <textarea class="form-textarea" id="sig-description" rows="3" placeholder="Enter report details, GDACS alert text, or RSS news headline..." required></textarea>
+          <label>Description</label>
+          <textarea id="description" rows="3" placeholder="Enter report details..." required></textarea>
         </div>
 
         <div class="form-group">
-          <label>6. Severity Level (1 to 10)</label>
-          <input type="number" class="form-input" id="sig-severity" min="1" max="10" value="8" />
+          <label>Severity (1-10)</label>
+          <input type="number" id="severity" min="1" max="10" value="7" required />
         </div>
 
-        <div style="display:flex; align-items:center; gap:8px;">
-          <input type="checkbox" id="sig-life-threat" style="width:16px; height:16px;" checked />
-          <label for="sig-life-threat" style="font-size:12px; color:#ef4444; font-weight:700;">Life-Threat Flag (Immediate Rescue Required)</label>
+        <div class="checkbox-group">
+          <input type="checkbox" id="life-threat" checked />
+          <label for="life-threat" style="font-size: 12px; margin: 0; color: var(--color-critical); font-weight: 700;">
+            Life-threatening situation
+          </label>
         </div>
 
-        <button type="submit" class="btn-action-primary" style="margin-top:10px; padding:10px;">
-          <i data-lucide="send" style="width:14px;"></i> Ingest & Run Hybrid Priority Triage
+        <button type="submit" class="submit-btn">
+          <i data-lucide="send" style="width: 14px;"></i> Ingest & Triage
         </button>
       </form>
-    </div>
-  </div>
-
-  <!-- Settings & AI Key Drawer Overlay -->
-  <div class="drawer-overlay" id="drawer-overlay">
-    <div class="drawer-content">
-      <div class="drawer-header">
-        <h3 style="font-size: 15px; font-weight: 700; color: white;">⚙️ System & AI Model Settings</h3>
-        <button class="btn-close-drawer" onclick="closeDrawer()">&times;</button>
-      </div>
-
-      <div style="display:flex; flex-direction:column; gap:12px;">
-        <span style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">Method ii: AI Suggestions API Key</span>
-        <div class="form-group">
-          <label>Gemini / LLM API Key (Optional)</label>
-          <input type="password" class="form-input" id="ai-api-key-input" placeholder="Leave empty for local AI NLP model" />
-          <span style="font-size:10.5px; color:var(--text-muted);">Leaving space for API key. If empty, uses embedded AI NLP evaluation model.</span>
-        </div>
-
-        <span style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-top:10px;">Method i: Formula Weights</span>
-
-        <div class="form-group"><label>Severity Weight (x3)</label><input type="range" id="w-sev-input" min="1" max="10" value="3" /></div>
-        <div class="form-group"><label>Corroboration Weight (x2)</label><input type="range" id="w-corr-input" min="1" max="10" value="2" /></div>
-        <div class="form-group"><label>Source Trust Weight (x2)</label><input type="range" id="w-trust-input" min="1" max="10" value="2" /></div>
-        <div class="form-group"><label>Vulnerability Weight (x1)</label><input type="range" id="w-vuln-input" min="1" max="10" value="1" /></div>
-        <div class="form-group"><label>Time Waiting Weight (x1)</label><input type="range" id="w-time-input" min="1" max="10" value="1" /></div>
-
-        <button class="btn-action-primary" style="margin-top:10px;" onclick="closeDrawer()">Save Configuration</button>
-      </div>
     </div>
   </div>
 
   <script>
     let incidents = [];
     let allRawSignals = [];
-    let selectedIncidentId = null;
+    let selectedIncId = null;
     let map = null;
-    let fullMap = null;
-    let mapMarkers = {};
-    let fullMapMarkers = {};
+    let fullmap = null;
+    const districtCoords = {
+      lalitpur: { lat: 27.632, lng: 85.295 },
+      kathmandu: { lat: 27.717, lng: 85.324 },
+      bhaktapur: { lat: 27.671, lng: 85.429 },
+      kaski: { lat: 28.209, lng: 83.985 },
+      chitwan: { lat: 27.678, lng: 84.432 }
+    };
 
     document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
       initMap();
       fetchIncidents();
-      setInterval(updateLiveClock, 1000);
-      updateLiveClock();
+      setInterval(updateTime, 1000);
     });
 
-    /* SPA Navigation View Switcher */
-    function switchView(viewName) {
-      document.querySelectorAll('.view-section').forEach(sec => sec.style.display = 'none');
-      const targetSec = document.getElementById(`view-${viewName}`);
-      if (targetSec) targetSec.style.display = 'flex';
-
-      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      const activeNav = document.getElementById(`nav-${viewName}`);
-      if (activeNav) activeNav.classList.add('active');
-
-      if (viewName === 'live-map') {
-        initFullMap();
-      } else if (viewName === 'incidents') {
-        renderIncidentsTable();
-      } else if (viewName === 'reports') {
-        fetchReportsViewData();
-      } else if (viewName === 'data-sources') {
-        renderDataSourcesView();
-      } else if (viewName === 'alerts') {
-        renderAlertsView();
-      }
-    }
-
-    function updateLiveClock() {
+    function updateTime() {
       const now = new Date();
-      document.getElementById('live-time-clock').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      document.getElementById('live-date-clock').textContent = now.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+      document.getElementById('live-time').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
     function initMap() {
-      map = L.map('leaflet-map', { center: [28.1, 84.4], zoom: 7, zoomControl: true, attributionControl: false });
+      map = L.map('map', { center: [28.1, 84.4], zoom: 8, zoomControl: false, attributionControl: false });
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(map);
-    }
-
-    function initFullMap() {
-      if (!fullMap) {
-        fullMap = L.map('full-leaflet-map', { center: [28.1, 84.4], zoom: 7, zoomControl: true, attributionControl: false });
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(fullMap);
-      }
-      setTimeout(() => { fullMap.invalidateSize(); renderFullMapMarkers(); }, 200);
     }
 
     async function fetchIncidents() {
@@ -1719,35 +976,30 @@
         const data = await response.json();
         incidents = data.incidents || [];
 
-        if (incidents.length > 0) {
-          if (!selectedIncidentId || !incidents.find(i => i.id === selectedIncidentId)) {
-            selectedIncidentId = incidents[0].id;
-          }
-        } else {
-          selectedIncidentId = null;
+        if (incidents.length > 0 && !selectedIncId) {
+          selectedIncId = incidents[0].id;
         }
 
-        renderKPICounts();
+        updateKPIs();
         renderQueue();
-        renderLiveMapMarkers();
-        renderIncidentDetails();
+        renderMapMarkers();
+        renderDetails();
+        renderQueueTable();
       } catch (err) {
-        console.error("Error fetching incidents:", err);
+        console.error(err);
       }
     }
 
-    function renderKPICounts() {
-      const high = incidents.filter(i => (i.manualPriority || i.triageScore) >= 80).length;
-      const med = incidents.filter(i => (i.manualPriority || i.triageScore) >= 50 && (i.manualPriority || i.triageScore) < 80).length;
-      const low = incidents.filter(i => (i.manualPriority || i.triageScore) < 50).length;
-      const rescuersCount = incidents.filter(i => i.status === 'rescuers_arrived').length;
+    function updateKPIs() {
+      const critical = incidents.filter(i => (i.manualPriority || i.triageScore) >= 85).length;
+      const high = incidents.filter(i => (i.manualPriority || i.triageScore) >= 65 && (i.manualPriority || i.triageScore) < 85).length;
+      const medium = incidents.filter(i => (i.manualPriority || i.triageScore) < 65).length;
 
-      document.getElementById('active-incidents-count').textContent = incidents.length;
+      document.getElementById('alert-count').textContent = incidents.length;
+      document.getElementById('kpi-critical').textContent = critical;
       document.getElementById('kpi-high').textContent = high;
-      document.getElementById('kpi-med').textContent = med;
-      document.getElementById('kpi-low').textContent = low;
-      document.getElementById('kpi-total').textContent = incidents.length + 42;
-      document.getElementById('kpi-rescuers').textContent = rescuersCount;
+      document.getElementById('kpi-medium').textContent = medium;
+      document.getElementById('kpi-total').textContent = incidents.length;
     }
 
     function renderQueue() {
@@ -1755,254 +1007,189 @@
       container.innerHTML = '';
 
       if (incidents.length === 0) {
-        container.innerHTML = `<div style="padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 13px;">🎉 All disaster incidents resolved! Queue is clear.</div>`;
+        container.innerHTML = '<div class="queue-empty">✅ No active incidents</div>';
         return;
       }
 
       incidents.forEach((inc, idx) => {
-        const rank = idx + 1;
-        const isSelected = inc.id === selectedIncidentId;
         const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
+        let scoreClass = 'score-low';
+        let levelText = 'Low';
 
-        let badgeClass = 'badge-medium';
-        let lvlText = inc.triageLevel;
-        if (score >= 85) badgeClass = 'badge-very-high';
-        else if (score >= 65) badgeClass = 'badge-high';
-        else if (score >= 45) badgeClass = 'badge-medium';
-        else badgeClass = 'badge-low';
+        if (score >= 85) {
+          scoreClass = 'score-critical';
+          levelText = 'Critical';
+        } else if (score >= 65) {
+          scoreClass = 'score-high';
+          levelText = 'High';
+        } else if (score >= 45) {
+          scoreClass = 'score-medium';
+          levelText = 'Med';
+        }
 
-        const rankColor = rank <= 2 ? '#ef4444' : rank <= 4 ? '#f97316' : '#eab308';
-        const reportsCount = inc.reports ? inc.reports.length : 1;
+        const rankColor = idx === 0 ? '#ef4444' : idx === 1 ? '#f97316' : '#eab308';
 
-        const item = document.createElement('div');
-        item.className = `queue-item ${isSelected ? 'selected' : ''}`;
-        item.onclick = () => selectIncident(inc.id);
+        const row = document.createElement('div');
+        row.className = `incident-row ${inc.id === selectedIncId ? 'selected' : ''}`;
+        row.onclick = () => selectIncident(inc.id);
 
-        item.innerHTML = `
-          <div class="queue-item-left">
-            <span class="rank-num" style="color: ${rankColor};">${rank}</span>
-            <div class="queue-item-meta">
-              <span class="queue-item-title">${inc.disasterType} - ${inc.locationName}</span>
-              <span class="queue-item-sub">
-                <i data-lucide="map-pin" style="width: 11px;"></i> ${inc.locationName}
-                ${inc.status === 'rescuers_arrived' ? '<span style="color:#10b981; font-weight:700; margin-left:6px;">🚑 Rescuers On-Site</span>' : ''}
-              </span>
-              <div class="queue-item-icons">
-                <span>📢 ${reportsCount} report(s)</span>
-                <span>⏱️ ${new Date(inc.firstReported).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-              </div>
+        row.innerHTML = `
+          <div class="incident-left">
+            <div class="incident-rank" style="color: ${rankColor};">${idx + 1}</div>
+            <div class="incident-info">
+              <div class="incident-name">${inc.disasterType}</div>
+              <div class="incident-location">📍 ${inc.locationName}</div>
             </div>
           </div>
-          <div class="queue-score-badge ${badgeClass}">
-            <span class="badge-score-val">${score}</span>
-            <span class="badge-score-lvl">${lvlText}</span>
+          <div class="incident-score ${scoreClass}">
+            <div class="score-num">${score}</div>
+            <div class="score-label">${levelText}</div>
           </div>
         `;
 
-        container.appendChild(item);
+        container.appendChild(row);
       });
-
-      lucide.createIcons();
     }
 
-    function selectIncident(incId) {
-      selectedIncidentId = incId;
-      renderQueue();
-      renderIncidentDetails();
-
-      const inc = incidents.find(i => i.id === incId);
-      if (inc && map) {
-        map.setView([inc.lat, inc.lng], 10, { animate: true });
-      }
-    }
-
-    function renderLiveMapMarkers() {
-      Object.keys(mapMarkers).forEach(id => mapMarkers[id].remove());
-      mapMarkers = {};
+    function renderMapMarkers() {
+      if (!map) return;
+      map.eachLayer(layer => {
+        if (layer instanceof L.CircleMarker) layer.remove();
+      });
 
       incidents.forEach(inc => {
         const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
-        let markerColor = '#10b981';
-        if (inc.status === 'rescuers_arrived') markerColor = '#3b82f6';
-        else if (score >= 85) markerColor = '#ef4444';
-        else if (score >= 65) markerColor = '#f97316';
-        else if (score >= 45) markerColor = '#eab308';
+        let color = '#10b981';
+        if (score >= 85) color = '#ef4444';
+        else if (score >= 65) color = '#f97316';
+        else if (score >= 45) color = '#eab308';
 
-        const isSelected = inc.id === selectedIncidentId;
+        const isSelected = inc.id === selectedIncId;
         const marker = L.circleMarker([inc.lat, inc.lng], {
-          radius: isSelected ? 13 : 9,
-          fillColor: markerColor,
-          color: isSelected ? '#ffffff' : '#000000',
-          weight: isSelected ? 3 : 1.5,
+          radius: isSelected ? 11 : 8,
+          fillColor: color,
+          color: isSelected ? '#fff' : '#000',
+          weight: isSelected ? 2 : 1,
           fillOpacity: 0.9
         }).addTo(map);
 
-        marker.bindPopup(`
-          <div style="font-family:Outfit; font-size:12px; padding:4px;">
-            <strong style="color:${markerColor}; font-size:13px;">${inc.disasterType}</strong><br/>
-            <strong>Location:</strong> ${inc.locationName}<br/>
-            <strong>Priority Score:</strong> ${score}/100<br/>
-            <strong>Status:</strong> ${inc.status.replace('_', ' ').toUpperCase()}
-          </div>
-        `);
-
+        marker.bindPopup(`<div style="font-size: 11px;"><strong>${inc.disasterType}</strong><br/>${inc.locationName}<br/>Score: ${score}</div>`);
         marker.on('click', () => selectIncident(inc.id));
-        mapMarkers[inc.id] = marker;
       });
     }
 
-    function renderFullMapMarkers() {
-      if (!fullMap) return;
-      Object.keys(fullMapMarkers).forEach(id => fullMapMarkers[id].remove());
-      fullMapMarkers = {};
-
-      incidents.forEach(inc => {
-        const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
-        let markerColor = '#10b981';
-        if (inc.status === 'rescuers_arrived') markerColor = '#3b82f6';
-        else if (score >= 85) markerColor = '#ef4444';
-        else if (score >= 65) markerColor = '#f97316';
-
-        const marker = L.circleMarker([inc.lat, inc.lng], {
-          radius: 12,
-          fillColor: markerColor,
-          color: '#ffffff',
-          weight: 2,
-          fillOpacity: 0.9
-        }).addTo(fullMap);
-
-        marker.bindPopup(`
-          <div style="font-family:Outfit; font-size:13px; padding:6px;">
-            <strong style="color:${markerColor};">${inc.disasterType} - ${inc.locationName}</strong><br/>
-            <strong>Triage Score:</strong> ${score}/100<br/>
-            <strong>Rescuer Status:</strong> ${inc.status.replace('_', ' ').toUpperCase()}<br/>
-            <strong>Centroid:</strong> ${inc.lat.toFixed(4)}, ${inc.lng.toFixed(4)}
-          </div>
-        `);
-
-        fullMapMarkers[inc.id] = marker;
-      });
+    function selectIncident(incId) {
+      selectedIncId = incId;
+      renderQueue();
+      renderMapMarkers();
+      renderDetails();
     }
 
-    function renderIncidentDetails() {
-      const body = document.getElementById('incident-details-body');
-      const inc = incidents.find(i => i.id === selectedIncidentId);
+    function renderDetails() {
+      const panel = document.getElementById('details-panel');
+      const inc = incidents.find(i => i.id === selectedIncId);
 
       if (!inc) {
-        body.innerHTML = `<div style="padding:40px 20px; text-align:center; color:var(--text-muted); font-size:13px;">Select an incident from the priority queue or click a map marker to view details and manage rescuer workflow.</div>`;
+        panel.innerHTML = '<div class="detail-empty">Select an incident to view details</div>';
         return;
       }
 
       const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
-      const isRescuersArrived = inc.status === 'rescuers_arrived';
+      const isArrived = inc.status === 'rescuers_arrived';
 
-      let reportsHtml = '';
-      if (inc.reports && inc.reports.length > 0) {
-        inc.reports.forEach(r => {
-          const icon = r.sourceType === 'call_center' ? '📞 Call Center' :
-            r.sourceType === 'sensor' ? '📡 GDACS Sensor' :
-              r.sourceType === 'social_media' ? '📱 Social Media' : '📰 News RSS Feed';
+      panel.innerHTML = `
+        <div class="detail-title">${inc.disasterType}</div>
+        <div class="detail-priority">${inc.triageLevel.toUpperCase()} (${score}/100)</div>
 
-          reportsHtml += `
-            <div class="report-card-item">
-              <div class="report-meta-header">
-                <span>${icon}</span>
-                <span>${new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-              </div>
-              <p class="report-text-content">"${r.description}"</p>
-            </div>
-          `;
-        });
-      }
-
-      let historyHtml = '';
-      if (inc.history && inc.history.length > 0) {
-        inc.history.forEach(h => {
-          historyHtml += `
-            <div style="font-size:10.5px; color:#cbd5e1; background:rgba(30,41,59,0.5); padding:4px 8px; border-radius:4px; margin-top:4px;">
-              <span style="color:#94a3b8;">[${new Date(h.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}]</span> ${h.message}
-            </div>
-          `;
-        });
-      }
-
-      body.innerHTML = `
-        <div class="detail-title-group">
-          <span class="detail-inc-name">${inc.disasterType} - ${inc.locationName}</span>
-          <div style="display:flex; gap:6px;">
-            <span class="detail-priority-tag">${inc.triageLevel} Priority (${score}/100)</span>
-            ${isRescuersArrived ? '<span style="background:rgba(16,185,129,0.2); color:#10b981; border:1px solid #10b981; padding:2px 8px; border-radius:4px; font-size:10.5px; font-weight:700;">🚑 Rescuers On-Site</span>' : ''}
-          </div>
+        <div class="detail-section">Location & Info</div>
+        <div class="detail-row">
+          <span class="detail-label">📍 Place</span>
+          <span class="detail-value">${inc.locationName}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">⏱️ Reported</span>
+          <span class="detail-value">${new Date(inc.firstReported).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
         </div>
 
-        ${isRescuersArrived ? `
-          <div class="rescuer-status-banner">
-            <i data-lucide="check-circle-2" style="width:16px;"></i>
-            <span>Rescuers have arrived at disaster site! Operations underway.</span>
-          </div>
-        ` : ''}
-
-        <span class="detail-section-title">Priority Scoring (2 Methods)</span>
-        <div class="methods-comparison-card">
-          <div class="method-row">
-            <span class="method-name">Method i: Formula Score</span>
-            <span class="method-val">${inc.formulaScore || Math.round(score * 0.95)} / 100</span>
-          </div>
-          <div class="method-row">
-            <span class="method-name">Method ii: AI Model Suggestion</span>
-            <span class="method-val" style="color:#ef4444;">${inc.aiSuggestedScore || score} / 100 (${inc.aiRiskLevel || 'High'})</span>
-          </div>
-          <div style="font-size:10.5px; color:var(--text-muted); line-height:1.3; font-style:italic;">
-            ${inc.aiRecommendation || 'AI Analysis: High priority life-threat detected. Immediate dispatch recommended.'}
-          </div>
+        <div class="detail-section">Priority Scoring</div>
+        <div class="detail-row">
+          <span class="detail-label">Formula Score</span>
+          <span class="detail-value">${inc.formulaScore || Math.round(score * 0.95)}/100</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">AI Suggestion</span>
+          <span class="detail-value">${inc.aiSuggestedScore || score}/100</span>
         </div>
 
-        <span class="detail-section-title">Full Linked Information & Reports (${inc.reports ? inc.reports.length : 1})</span>
-        <div class="reports-list-box">${reportsHtml}</div>
-
-        <span class="detail-section-title">Rescue Log & Audit History</span>
-        <div style="display:flex; flex-direction:column; gap:2px;">
-          ${historyHtml || '<div style="font-size:10.5px; color:var(--text-muted);">No rescue log entries yet.</div>'}
+        <div class="detail-section">Status</div>
+        <div class="detail-row">
+          <span class="detail-label">Rescuer Status</span>
+          <span class="detail-value" style="color: ${isArrived ? '#10b981' : '#f97316'};">
+            ${isArrived ? '🚑 On-Site' : '⏳ Dispatched'}
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Reports</span>
+          <span class="detail-value">${inc.reports ? inc.reports.length : 1}</span>
         </div>
 
-        <div class="rescuer-actions-row">
-          <span style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Rescuer Operations & Manual Log</span>
-          ${!isRescuersArrived ? `
-            <button class="btn-rescuers-arrived" onclick="logRescuerArrival('${inc.id}')">
-              <i data-lucide="truck" style="width:15px;"></i> 🚑 Log Rescuers Arrived at Disaster Site
+        <div class="detail-section">Data Sources</div>
+        <div class="detail-row">
+          <span class="detail-label">📞 Call Center</span>
+          <span class="detail-value" style="color: #10b981;">🟢 Online</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">📡 GDACS Sensors</span>
+          <span class="detail-value" style="color: #10b981;">🟢 Online</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">📱 Social Media</span>
+          <span class="detail-value" style="color: #10b981;">🟢 Online</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">📰 News RSS Feeds</span>
+          <span class="detail-value" style="color: #10b981;">🟢 Online</span>
+        </div>
+
+        <div class="action-buttons">
+          ${!isArrived ? `
+            <button class="btn btn-arrive" onclick="logArrival('${inc.id}')">
+              <i data-lucide="truck" style="width: 12px;"></i> Arrived
             </button>
           ` : `
-            <button class="btn-resolve-completed" onclick="markWorkCompleted('${inc.id}')">
-              <i data-lucide="check-circle" style="width:15px;"></i> ✅ Rescuers Completed Work (Resolve & Remove)
+            <button class="btn btn-complete" onclick="logComplete('${inc.id}')">
+              <i data-lucide="check" style="width: 12px;"></i> Complete
             </button>
           `}
         </div>
       `;
 
-      document.getElementById('gauge-score-val').textContent = score;
       lucide.createIcons();
     }
 
-    /* VIEW SPECIFIC RENDERING FUNCTIONS */
-    function renderIncidentsTable() {
-      const tbody = document.getElementById('incidents-table-body');
+    function renderQueueTable() {
+      const tbody = document.getElementById('queue-tbody');
       tbody.innerHTML = '';
+
       incidents.forEach((inc, idx) => {
-        const rank = idx + 1;
         const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><strong style="color:${rank<=2?'#ef4444':'#f97316'}">#${rank}</strong></td>
+          <td>${idx + 1}</td>
           <td><strong>${inc.disasterType}</strong> - ${inc.locationName}</td>
-          <td>${inc.formulaScore || Math.round(score * 0.95)} / 100</td>
-          <td><strong style="color:#ef4444;">${inc.aiSuggestedScore || score} / 100</strong></td>
-          <td>${inc.reports ? inc.reports.length : 1} report(s)</td>
-          <td><span style="color:${inc.status==='rescuers_arrived'?'#10b981':'#f97316'}; font-weight:700;">${inc.status.replace('_', ' ').toUpperCase()}</span></td>
+          <td>${score}</td>
+          <td>${inc.triageLevel}</td>
+          <td>${inc.reports ? inc.reports.length : 1}</td>
+          <td>${inc.status === 'rescuers_arrived' ? '🚑 On-Site' : '⏳ Active'}</td>
           <td>
             ${inc.status !== 'rescuers_arrived' ? `
-              <button class="btn-action-primary" style="padding:4px 8px; font-size:11px;" onclick="logRescuerArrival('${inc.id}')">Log Arrival</button>
+              <button style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;" onclick="logArrival('${inc.id}')">
+                Arrived
+              </button>
             ` : `
-              <button style="background:#10b981; color:white; border:none; padding:4px 8px; font-size:11px; border-radius:4px; font-weight:700; cursor:pointer;" onclick="markWorkCompleted('${inc.id}')">Complete Work</button>
+              <button style="padding: 4px 8px; background: #10b981; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;" onclick="logComplete('${inc.id}')">
+                Done
+              </button>
             `}
           </td>
         `;
@@ -2010,160 +1197,101 @@
       });
     }
 
-    function renderDataSourcesView() {
-      const grid = document.getElementById('data-sources-grid');
-      grid.innerHTML = `
-        <div class="grid-card" style="padding:16px;">
-          <h4 style="font-size:14px; font-weight:700; color:white; margin-bottom:8px;">📡 GDACS Global Alert Feed (gdacs.org)</h4>
-          <p style="font-size:12px; color:var(--text-secondary); line-height:1.4;">Real-time automated connection to Global Disaster Alert & Coordination System (GDACS) RSS/GeoJSON feed for satellite, seismic, and hydrological sensors.</p>
-          <div style="margin-top:12px; font-size:11.5px; color:#10b981; font-weight:700;">STATUS: ONLINE (Sync Rate: 2s) | Trust Factor: 0.9</div>
-        </div>
-
-        <div class="grid-card" style="padding:16px;">
-          <h4 style="font-size:14px; font-weight:700; color:white; margin-bottom:8px;">📞 Call Center 911/115 Telephony Listener</h4>
-          <p style="font-size:12px; color:var(--text-secondary); line-height:1.4;">Direct audio-to-text operator call entry log integration for emergency responder dispatches across Nepal districts.</p>
-          <div style="margin-top:12px; font-size:11.5px; color:#10b981; font-weight:700;">STATUS: ONLINE (Direct Ingestion) | Trust Factor: 1.0</div>
-        </div>
-
-        <div class="grid-card" style="padding:16px;">
-          <h4 style="font-size:14px; font-weight:700; color:white; margin-bottom:8px;">📱 Social Media NLP Listener</h4>
-          <p style="font-size:12px; color:var(--text-secondary); line-height:1.4;">Monitors X/Twitter, Facebook groups, and Telegram channels for disaster keyword matches and geocoded civilian posts.</p>
-          <div style="margin-top:12px; font-size:11.5px; color:#10b981; font-weight:700;">STATUS: ONLINE (Listener Active) | Trust Factor: 0.4</div>
-        </div>
-
-        <div class="grid-card" style="padding:16px;">
-          <h4 style="font-size:14px; font-weight:700; color:white; margin-bottom:8px;">📰 RSS News Stream Integrator</h4>
-          <p style="font-size:12px; color:var(--text-secondary); line-height:1.4;">Parses live RSS news feeds from major national press outlets (Kathmandu Post, Onlinekhabar) for confirmed disaster events.</p>
-          <div style="margin-top:12px; font-size:11.5px; color:#10b981; font-weight:700;">STATUS: ONLINE (RSS Parser Active) | Trust Factor: 0.8</div>
-        </div>
-      `;
-    }
-
-    async function fetchReportsViewData() {
-      try {
-        const res = await fetch('/api/signals/all/');
-        const data = await res.json();
-        allRawSignals = data.signals || [];
-        renderReportsTable(allRawSignals);
-      } catch (err) { console.error(err); }
-    }
-
-    function renderReportsTable(signalsList) {
-      const tbody = document.getElementById('reports-table-body');
-      tbody.innerHTML = '';
-      signalsList.forEach(sig => {
-        const tr = document.createElement('tr');
-        const icon = sig.sourceType === 'call_center' ? '📞 Call Center' :
-                     sig.sourceType === 'sensor' ? '📡 GDACS Sensor' :
-                     sig.sourceType === 'social_media' ? '📱 Social Media' : '📰 News RSS';
-
-        tr.innerHTML = `
-          <td>#${sig.id}</td>
-          <td><strong>${icon}</strong></td>
-          <td>${sig.disasterType}</td>
-          <td>${sig.locationName}</td>
-          <td>"${sig.description}"</td>
-          <td><span style="color:${sig.severity>=8?'#ef4444':'#f97316'}; font-weight:700;">${sig.severity}/10</span></td>
-          <td>${new Date(sig.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function filterReportsTable() {
-      const query = document.getElementById('report-search-input').value.toLowerCase();
-      const filtered = allRawSignals.filter(s => 
-        s.description.toLowerCase().includes(query) || 
-        s.locationName.toLowerCase().includes(query) ||
-        s.sourceType.toLowerCase().includes(query)
-      );
-      renderReportsTable(filtered);
-    }
-
-    function renderAlertsView() {
-      const box = document.getElementById('alerts-view-content');
-      box.innerHTML = `
-        <div class="grid-card" style="padding:16px; border-left:4px solid #ef4444;">
-          <h4 style="font-size:14px; font-weight:700; color:#ef4444;">🚨 GDACS WARNING: Bhotekoshi Flash Flood Inundation Alert</h4>
-          <p style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Global Disaster Alert & Coordination System (GDACS) issued Level 2 Orange Warning for Bhotekoshi river basin. Life-threat drowning risk reported in Helambu.</p>
-        </div>
-
-        <div class="grid-card" style="padding:16px; border-left:4px solid #f97316;">
-          <h4 style="font-size:14px; font-weight:700; color:#f97316;">⚠️ RSS NEWS ALERT: Highway Blockade in Sisneri Corridor</h4>
-          <p style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Continuous rain triggered major mudslide near Sisneri. Clearance operations underway.</p>
-        </div>
-      `;
-    }
-
-    async function triggerGdacsLiveSync() {
-      try {
-        const res = await fetch('/api/feeds/gdacs/sync/', { method: 'POST' });
-        const data = await res.json();
-        if (data.success) {
-          alert(data.message);
-          fetchIncidents();
-        }
-      } catch (err) { console.error(err); }
-    }
-
-    /* RESCUER WORKFLOW & INGESTION FUNCTIONS */
-    async function logRescuerArrival(incId) {
+    async function logArrival(incId) {
       try {
         const response = await fetch(`/api/incidents/${incId}/override/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: 'rescuers_arrived' })
         });
-        const res = await response.json();
-        if (res.success) fetchIncidents();
+        const data = await response.json();
+        if (data.success) fetchIncidents();
       } catch (err) { console.error(err); }
     }
 
-    async function markWorkCompleted(incId) {
+    async function logComplete(incId) {
       try {
         const response = await fetch(`/api/incidents/${incId}/override/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: 'resolved' })
         });
-        const res = await response.json();
-        if (res.success) {
-          selectedIncidentId = null;
+        const data = await response.json();
+        if (data.success) {
+          selectedIncId = null;
           fetchIncidents();
         }
       } catch (err) { console.error(err); }
     }
 
-    function openIngestModal() { document.getElementById('ingest-modal').style.display = 'flex'; }
-    function closeIngestModal() { document.getElementById('ingest-modal').style.display = 'none'; }
+    function switchView(viewName) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(`view-${viewName}`).classList.add('active');
 
-    async function submitRealTimeSignal(e) {
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      document.getElementById(`nav-${viewName}`).classList.add('active');
+
+      if (viewName === 'fullmap') {
+        initFullMap();
+      } else if (viewName === 'reports') {
+        fetchReports();
+      }
+    }
+
+    function initFullMap() {
+      if (fullmap) return;
+      fullmap = L.map('fullmap', { center: [28.1, 84.4], zoom: 7, zoomControl: true, attributionControl: false });
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(fullmap);
+
+      setTimeout(() => {
+        fullmap.invalidateSize();
+        incidents.forEach(inc => {
+          const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
+          let color = '#10b981';
+          if (score >= 85) color = '#ef4444';
+          else if (score >= 65) color = '#f97316';
+
+          const marker = L.circleMarker([inc.lat, inc.lng], {
+            radius: 10,
+            fillColor: color,
+            color: '#fff',
+            weight: 2,
+            fillOpacity: 0.9
+          }).addTo(fullmap);
+
+          marker.bindPopup(`<strong>${inc.disasterType}</strong><br/>${inc.locationName}<br/>Score: ${score}`);
+        });
+      }, 100);
+    }
+
+    function openIngestModal() {
+      document.getElementById('ingest-modal').style.display = 'flex';
+    }
+
+    function closeIngestModal() {
+      document.getElementById('ingest-modal').style.display = 'none';
+    }
+
+    async function submitSignal(e) {
       e.preventDefault();
-      const sourceType = document.getElementById('sig-source-type').value;
-      const hazardType = document.getElementById('sig-disaster-type').value;
-      const locationName = document.getElementById('sig-location-name').value;
-      const district = document.getElementById('sig-district').value;
-      const description = document.getElementById('sig-description').value;
-      const severity = parseInt(document.getElementById('sig-severity').value);
-      const isLifeThreat = document.getElementById('sig-life-threat').checked;
 
-      const coords = {
-        lalitpur: { lat: 27.632, lng: 85.295 },
-        kathmandu: { lat: 27.717, lng: 85.324 },
-        bhaktapur: { lat: 27.671, lng: 85.429 },
-        sindhupalchok: { lat: 27.791, lng: 85.850 },
-        kaski: { lat: 28.209, lng: 83.985 },
-        chitwan: { lat: 27.678, lng: 84.432 },
-        jajarkot: { lat: 28.905, lng: 82.205 }
-      }[district] || { lat: 27.7, lng: 85.3 };
+      const sourceType = document.getElementById('source-type').value;
+      const hazardType = document.getElementById('hazard-type').value;
+      const location = document.getElementById('location').value;
+      const district = document.getElementById('district').value;
+      const description = document.getElementById('description').value;
+      const severity = parseInt(document.getElementById('severity').value);
+      const isLifeThreat = document.getElementById('life-threat').checked;
+
+      const coords = districtCoords[district] || { lat: 27.7, lng: 85.3 };
 
       const rawData = {
-        callerName: "Real-Time Ingestion",
+        callerName: 'Real-Time Ingest',
         needType: hazardType,
         lat: coords.lat + (Math.random() - 0.5) * 0.02,
         lng: coords.lng + (Math.random() - 0.5) * 0.02,
         district: district,
-        locationName: locationName,
+        locationName: location,
         operatorSeverity: severity,
         isLifeThreat: isLifeThreat,
         description: description
@@ -2175,63 +1303,56 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sourceType, rawData })
         });
-        const res = await response.json();
-        if (res.success) {
+        const data = await response.json();
+        if (data.success) {
           closeIngestModal();
+          document.getElementById('ingest-form').reset();
           fetchIncidents();
         }
       } catch (err) { console.error(err); }
     }
 
-    /* CHATBOT FUNCTIONS */
-    function toggleChatWindow() {
-      const win = document.getElementById('chatbot-window');
-      win.style.display = (win.style.display === 'flex') ? 'none' : 'flex';
-    }
-
-    function handleChatKeyPress(e) { if (e.key === 'Enter') sendChatMessage(); }
-    function sendQuickChat(msg) { document.getElementById('chat-input-field').value = msg; sendChatMessage(); }
-
-    async function sendChatMessage() {
-      const input = document.getElementById('chat-input-field');
-      const text = input.value.trim();
-      if (!text) return;
-
-      const box = document.getElementById('chat-messages-box');
-      const uDiv = document.createElement('div');
-      uDiv.className = 'chat-msg user';
-      uDiv.textContent = text;
-      box.appendChild(uDiv);
-
-      input.value = '';
-      box.scrollTop = box.scrollHeight;
-
+    async function fetchReports() {
       try {
-        const response = await fetch('/api/chatbot/query/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text })
-        });
+        const response = await fetch('/api/signals/all/');
         const data = await response.json();
-
-        const bDiv = document.createElement('div');
-        bDiv.className = 'chat-msg bot';
-        bDiv.textContent = data.reply || "Processed query against live EOC database.";
-        box.appendChild(bDiv);
-        box.scrollTop = box.scrollHeight;
-
-      } catch (err) {
-        const bDiv = document.createElement('div');
-        bDiv.className = 'chat-msg bot';
-        bDiv.textContent = "Error connecting to AI Chatbot service.";
-        box.appendChild(bDiv);
-        box.scrollTop = box.scrollHeight;
-      }
+        allRawSignals = data.signals || [];
+        renderReports(allRawSignals);
+      } catch (err) { console.error(err); }
     }
 
-    function openDrawer() { document.getElementById('drawer-overlay').style.display = 'flex'; }
-    function closeDrawer() { document.getElementById('drawer-overlay').style.display = 'none'; }
+    function renderReports(signals) {
+      const tbody = document.getElementById('reports-tbody');
+      tbody.innerHTML = '';
+
+      signals.forEach(sig => {
+        const sourceIcon = sig.sourceType === 'call_center' ? '📞 Call Center' :
+                          sig.sourceType === 'sensor' ? '📡 GDACS' :
+                          sig.sourceType === 'social_media' ? '📱 Social Media' : '📰 News RSS';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>#${sig.id}</td>
+          <td>${sourceIcon}</td>
+          <td>${sig.disasterType}</td>
+          <td>${sig.locationName}</td>
+          <td>"${sig.description}"</td>
+          <td><span style="color: ${sig.severity >= 8 ? '#ef4444' : '#f97316'}; font-weight: 700;">${sig.severity}/10</span></td>
+          <td>${new Date(sig.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterReports() {
+      const query = document.getElementById('report-search').value.toLowerCase();
+      const filtered = allRawSignals.filter(s =>
+        s.description.toLowerCase().includes(query) ||
+        s.locationName.toLowerCase().includes(query) ||
+        s.disasterType.toLowerCase().includes(query)
+      );
+      renderReports(filtered);
+    }
   </script>
 </body>
-
 </html>
