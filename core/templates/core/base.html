@@ -1,0 +1,355 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}PRATHAMIKTA - Priority Disaster Triage{% endblock %}</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">
+        <i data-lucide="shield-alert" style="width: 18px; height: 18px;"></i>
+      </div>
+      <div class="logo-text">PRATHAMIKTA</div>
+    </div>
+
+    <div class="nav-section">
+      <a class="nav-item {% block nav_dashboard %}{% endblock %}" id="nav-dashboard" href="{% url 'index' %}">
+        <i data-lucide="layout-dashboard" style="width: 16px;"></i>
+        Dashboard
+      </a>
+      <a class="nav-item {% block nav_queue %}{% endblock %}" id="nav-queue" href="{% url 'all_incidents' %}">
+        <i data-lucide="list" style="width: 16px;"></i>
+        All Incidents
+      </a>
+      <a class="nav-item {% block nav_fullmap %}{% endblock %}" id="nav-fullmap" href="{% url 'full_map' %}">
+        <i data-lucide="map" style="width: 16px;"></i>
+        Full Map
+      </a>
+      <a class="nav-item {% block nav_reports %}{% endblock %}" id="nav-reports" href="{% url 'reports' %}">
+        <i data-lucide="file-text" style="width: 16px;"></i>
+        Reports
+      </a>
+      <a class="nav-item" id="nav-sync-feeds" onclick="syncLiveFeeds()"
+        style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; color: #60a5fa;">
+        <i data-lucide="refresh-cw" style="width: 16px; color: #60a5fa;"></i>
+        Sync Live Feeds
+      </a>
+    </div>
+
+    <button class="footer-btn" onclick="openIngestModal()">
+      <i data-lucide="plus" style="width: 14px;"></i>
+      Ingest Signal
+    </button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-left">
+        <div class="alert-pill">
+          <div class="badge-count" id="alert-count">0</div>
+          <span>Active Incidents</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <span id="live-time">14:35</span>
+        <span style="font-size: 10px; background: #1e2638; padding: 2px 6px; border-radius: 3px;">NPT</span>
+        <div class="status-online">
+          <div class="status-dot"></div>
+          <span>System Online</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEWS -->
+    <div class="views">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+
+  <!-- CHATBOT -->
+  <button class="chatbot-toggle" id="chatbot-toggle" onclick="toggleChatbot()" aria-label="Open chatbot">
+    <i data-lucide="message-circle" style="width: 22px; height: 22px;"></i>
+  </button>
+
+  <div class="chatbot-panel" id="chatbot-panel">
+    <div class="chatbot-header">
+      <span>PRATHAMIKTA AI Assistant</span>
+      <button class="chatbot-close" onclick="toggleChatbot()">×</button>
+    </div>
+    <div class="chatbot-body" id="chatbot-body">
+      <div class="chat-msg bot">👋 Hello! Ask me for disaster statistics, the highest priority site, or the priority
+        formula.</div>
+    </div>
+    <div class="chatbot-input-row">
+      <input class="chatbot-input" id="chatbot-input" type="text" placeholder="Ask about incidents..." />
+      <button class="chatbot-send" onclick="sendChatbotMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- INGEST MODAL -->
+  <div class="modal-overlay" id="ingest-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>➕ Ingest Disaster Signal</h3>
+        <button class="close-btn" onclick="closeIngestModal()">&times;</button>
+      </div>
+
+      <form id="ingest-form" onsubmit="submitSignal(event)">
+        <div class="form-group">
+          <label>Source</label>
+          <select id="source-type" required>
+            <option value="call_center">📞 Disaster Call (911/115)</option>
+            <option value="sensor">📡 GDACS Sensor Alert</option>
+            <option value="social_media">📱 Social Media Post</option>
+            <option value="news">📰 News RSS Feed</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Hazard Type</label>
+          <select id="hazard-type" required>
+            <option value="Flood">Flood</option>
+            <option value="Landslide">Landslide</option>
+            <option value="Earthquake">Earthquake</option>
+            <option value="Fire">Fire</option>
+            <option value="Avalanche">Avalanche</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" id="location" placeholder="e.g. Khokana, Lalitpur" required />
+        </div>
+
+        <div class="form-group">
+          <label>District</label>
+          <select id="district" required>
+            <option value="lalitpur">Lalitpur</option>
+            <option value="kathmandu">Kathmandu</option>
+            <option value="bhaktapur">Bhaktapur</option>
+            <option value="kaski">Kaski (Pokhara)</option>
+            <option value="chitwan">Chitwan</option>
+            <option value="sindhupalchok">Sindhupalchok</option>
+            <option value="sunsari">Sunsari</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="description" rows="3" placeholder="Enter report details..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Severity (1-10)</label>
+          <input type="number" id="severity" min="1" max="10" value="7" required />
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="life-threat" checked />
+          <label for="life-threat" style="font-size: 12px; margin: 0; color: var(--color-critical); font-weight: 700;">
+            Life-threatening situation
+          </label>
+        </div>
+
+        <button type="submit" class="submit-btn">
+          <i data-lucide="send" style="width: 14px;"></i> Ingest & Triage
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let incidents = [];
+    let allRawSignals = [];
+    let selectedIncId = null;
+    let liveFeeds = [];
+    let feedMarkers = [];
+    const districtCoords = {
+      lalitpur: { lat: 27.632, lng: 85.295 },
+      kathmandu: { lat: 27.717, lng: 85.324 },
+      bhaktapur: { lat: 27.671, lng: 85.429 },
+      kaski: { lat: 28.209, lng: 83.985 },
+      chitwan: { lat: 27.678, lng: 84.432 },
+      sindhupalchok: { lat: 27.832, lng: 85.584 },
+      sunsari: { lat: 26.6, lng: 87.15 }
+    };
+
+    function cleanLocation(locName, districtName) {
+      if (!locName || locName.toLowerCase().includes('unknown') || locName.toLowerCase() === 'reported location') {
+        if (districtName && !districtName.toLowerCase().includes('unknown') && districtName.toLowerCase() !== 'general') {
+          return districtName.charAt(0).toUpperCase() + districtName.slice(1) + ' Sector';
+        }
+        return 'Nepal Emergency Site';
+      }
+      return locName;
+    }
+
+    function updateTime() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const el = document.getElementById('live-time');
+      if (el) el.textContent = timeStr;
+    }
+
+    function updateAlertCount(count) {
+      const el = document.getElementById('alert-count');
+      if (el) el.textContent = count;
+    }
+
+    async function syncLiveFeeds() {
+      const syncBtn = document.getElementById('nav-sync-feeds');
+      const originalHtml = syncBtn.innerHTML;
+      syncBtn.style.pointerEvents = 'none';
+      syncBtn.innerHTML = `<i data-lucide="refresh-cw" class="spin" style="width: 16px; color: #60a5fa;"></i> Syncing...`;
+      lucide.createIcons();
+
+      try {
+        const response = await fetch('/api/feeds/gdacs/sync/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await response.json();
+        if (data.success) {
+          alert(`Successfully ingested ${data.count} real-time signals!`);
+          if (typeof fetchIncidents === 'function') fetchIncidents();
+          if (typeof fetchLiveFeeds === 'function') fetchLiveFeeds();
+          if (typeof fetchReports === 'function') fetchReports();
+        } else {
+          alert(`Error syncing: ${data.error || 'Unknown error'}`);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to connect to sync API.');
+      } finally {
+        syncBtn.style.pointerEvents = 'auto';
+        syncBtn.innerHTML = originalHtml;
+        lucide.createIcons();
+      }
+    }
+
+    function toggleChatbot() {
+      const panel = document.getElementById('chatbot-panel');
+      panel.classList.toggle('open');
+    }
+
+    function appendChatMessage(text, sender = 'bot') {
+      const body = document.getElementById('chatbot-body');
+      const msg = document.createElement('div');
+      msg.className = `chat-msg ${sender}`;
+      msg.textContent = text;
+      body.appendChild(msg);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    async function sendChatbotMessage() {
+      const input = document.getElementById('chatbot-input');
+      const message = input.value.trim();
+      if (!message) return;
+
+      appendChatMessage(message, 'user');
+      input.value = '';
+
+      try {
+        const response = await fetch('/api/chatbot/query/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+        const data = await response.json();
+        const reply = data.reply || 'I could not generate a response right now.';
+        appendChatMessage(reply, 'bot');
+      } catch (err) {
+        appendChatMessage('Sorry, the chatbot service is unavailable right now.', 'bot');
+        console.error(err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      setInterval(updateTime, 1000);
+      updateTime();
+
+      const inputEl = document.getElementById('chatbot-input');
+      if (inputEl) {
+        inputEl.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') sendChatbotMessage();
+        });
+      }
+    });
+
+    function openIngestModal() {
+      document.getElementById('ingest-modal').style.display = 'flex';
+    }
+
+    function closeIngestModal() {
+      document.getElementById('ingest-modal').style.display = 'none';
+    }
+
+    async function submitSignal(e) {
+      e.preventDefault();
+
+      const sourceType = document.getElementById('source-type').value;
+      const hazardType = document.getElementById('hazard-type').value;
+      const location = document.getElementById('location').value;
+      const district = document.getElementById('district').value;
+      const description = document.getElementById('description').value;
+      const severity = parseInt(document.getElementById('severity').value);
+      const isLifeThreat = document.getElementById('life-threat').checked;
+
+      const coords = districtCoords[district] || { lat: 27.7, lng: 85.3 };
+
+      const rawData = {
+        callerName: 'Real-Time Ingest',
+        needType: hazardType,
+        lat: coords.lat + (Math.random() - 0.5) * 0.02,
+        lng: coords.lng + (Math.random() - 0.5) * 0.02,
+        district: district,
+        locationName: location,
+        operatorSeverity: severity,
+        isLifeThreat: isLifeThreat,
+        description: description
+      };
+
+      try {
+        const response = await fetch('/api/signals/ingest/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sourceType, rawData })
+        });
+        const data = await response.json();
+        if (data.success) {
+          closeIngestModal();
+          document.getElementById('ingest-form').reset();
+          if (typeof fetchIncidents === 'function') fetchIncidents();
+        }
+      } catch (err) { console.error(err); }
+    }
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,129 @@
+{% extends 'core/base.html' %}
+
+{% block title %}PRATHAMIKTA - All Disaster Incidents{% endblock %}
+{% block nav_queue %}active{% endblock %}
+
+{% block content %}
+<div class="view active" id="view-queue">
+  <div class="fullpage">
+    <div class="fullpage-card">
+      <div class="fullpage-header">
+        <span>All Disaster Incidents</span>
+        <button class="footer-btn" style="width: auto;" onclick="openIngestModal()">
+          <i data-lucide="plus" style="width: 14px;"></i> Add Incident
+        </button>
+      </div>
+      <div class="table-container">
+        <table id="queue-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Hazard & Location</th>
+              <th>Score</th>
+              <th>Level</th>
+              <th>Reports</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="queue-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    fetchIncidents();
+  });
+
+  async function fetchIncidents() {
+    try {
+      const response = await fetch('/api/incidents/');
+      const data = await response.json();
+      const rawIncidents = data.incidents || [];
+      incidents = rawIncidents.filter(i => i.status !== 'resolved' && i.status !== 'dismissed');
+
+      updateAlertCount(incidents.length);
+      renderQueueTable();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function renderQueueTable() {
+    const tbody = document.getElementById('queue-tbody');
+    tbody.innerHTML = '';
+
+    if (incidents.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+            ✅ No active disaster incidents currently registered.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    incidents.forEach((inc, idx) => {
+      const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
+      const locDisplay = cleanLocation(inc.locationName, inc.districtId);
+      const tr = document.createElement('tr');
+
+      let levelColor = '#10b981';
+      if (score >= 85) levelColor = '#ef4444';
+      else if (score >= 65) levelColor = '#f97316';
+      else if (score >= 45) levelColor = '#eab308';
+
+      tr.innerHTML = `
+        <td>${idx + 1}</td>
+        <td><strong>${inc.disasterType}</strong> - ${locDisplay}</td>
+        <td><strong style="color: ${levelColor};">${score}</strong></td>
+        <td><span style="background: rgba(255,255,255,0.08); padding: 3px 8px; border-radius: 4px; font-weight: 700; color: ${levelColor}">${inc.triageLevel}</span></td>
+        <td>${inc.reports ? inc.reports.length : 1}</td>
+        <td>${inc.status === 'rescuers_arrived' ? '🚑 On-Site' : '⏳ Active'}</td>
+        <td>
+          ${inc.status !== 'rescuers_arrived' ? `
+            <button style="padding: 5px 10px; background: #3b82f6; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 700;" onclick="logArrival('${inc.id}')">
+              Arrived
+            </button>
+          ` : `
+            <button style="padding: 5px 10px; background: #10b981; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 700;" onclick="logComplete('${inc.id}')">
+              Complete
+            </button>
+          `}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function logArrival(incId) {
+    try {
+      const response = await fetch(`/api/incidents/${incId}/override/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rescuers_arrived' })
+      });
+      const data = await response.json();
+      if (data.success) fetchIncidents();
+    } catch (err) { console.error(err); }
+  }
+
+  async function logComplete(incId) {
+    try {
+      const response = await fetch(`/api/incidents/${incId}/override/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'resolved' })
+      });
+      const data = await response.json();
+      if (data.success) fetchIncidents();
+    } catch (err) { console.error(err); }
+  }
+</script>
+{% endblock %}

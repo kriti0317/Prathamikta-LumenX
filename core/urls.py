@@ -3,6 +3,11 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('incidents/', views.all_incidents, name='all_incidents'),
+    path('map/', views.full_map, name='full_map'),
+    path('reports/', views.reports_view, name='reports'),
+
+    # API endpoints
     path('api/incidents/', views.get_incidents, name='get_incidents'),
     path('api/signals/ingest/', views.ingest_signal, name='ingest_signal'),
     path('api/signals/all/', views.get_all_signals, name='get_all_signals'),

@@ -1,1956 +1,517 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PRATHAMIKTA - Priority Disaster Triage</title>
-
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
-    rel="stylesheet">
-
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-  <style>
-    :root {
-      --bg-main: #0b0f17;
-      --bg-sidebar: #090c13;
-      --bg-card: #131926;
-      --bg-hover: #172032;
-      --border: #1e2638;
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --color-critical: #ef4444;
-      --color-high: #f97316;
-      --color-medium: #eab308;
-      --color-low: #10b981;
-      --font: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      background: var(--bg-main);
-      color: var(--text-primary);
-      font-family: var(--font);
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-    }
-
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: rgba(15, 23, 42, 0.4);
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #27354e;
-      border-radius: 3px;
-    }
-
-    /* SIDEBAR */
-    .sidebar {
-      width: 200px;
-      background: var(--bg-sidebar);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      padding: 16px 12px;
-      gap: 12px;
-      flex-shrink: 0;
-      height: 100vh;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px;
-      margin-bottom: 8px;
-    }
-
-    .logo-icon {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #ef4444, #991b1b);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
-    }
-
-    .logo-text {
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: 0.3px;
-    }
-
-    .nav-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 6px;
-      color: var(--text-secondary);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s;
-      border: 1px solid transparent;
-      text-decoration: none;
-    }
-
-    .nav-item:hover {
-      background: rgba(255, 255, 255, 0.05);
-      color: white;
-    }
-
-    .nav-item.active {
-      background: rgba(239, 68, 68, 0.15);
-      border-color: rgba(239, 68, 68, 0.35);
-      color: white;
-      font-weight: 600;
-    }
-
-    .nav-item.active i {
-      color: var(--color-critical);
-    }
-
-    .footer-btn {
-      width: 100%;
-      padding: 10px 12px;
-      background: var(--color-critical);
-      border: none;
-      border-radius: 6px;
-      color: white;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: background 0.15s;
-    }
-
-    .footer-btn:hover {
-      background: #dc2626;
-    }
-
-    /* MAIN CONTENT */
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-      background: var(--bg-main);
-    }
-
-    /* HEADER */
-    .header {
-      height: 50px;
-      padding: 0 18px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 12px;
-    }
-
-    .alert-pill {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(239, 68, 68, 0.12);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      padding: 5px 12px;
-      border-radius: 20px;
-      font-weight: 600;
-    }
-
-    .badge-count {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--color-critical);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      font-weight: 800;
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
-
-    .status-online {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--color-low);
-      box-shadow: 0 0 6px var(--color-low);
-    }
-
-    /* VIEWS */
-    .views {
-      flex: 1;
-      display: flex;
-      overflow: hidden;
-    }
-
-    .view {
-      flex: 1;
-      display: none;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .view.active {
-      display: flex;
-    }
-
-    /* DASHBOARD: 3-COLUMN LAYOUT */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: 1fr 1.4fr 1.1fr;
-      gap: 12px;
-      padding: 12px;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    .panel {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      min-height: 0;
-    }
-
-    .panel-header {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .panel-content {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* INCIDENT QUEUE */
-    .queue {
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      overflow-y: auto;
-      flex: 1;
-      min-height: 0;
-      max-height: 100%;
-    }
-
-    .incident-check-btn {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.7);
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: all 0.2s ease;
-      margin-right: 4px;
-    }
-
-    .incident-check-btn:hover {
-      background: rgba(16, 185, 129, 0.25);
-      border-color: var(--color-low);
-      color: #10b981;
-      transform: scale(1.12);
-    }
-
-    .queue-empty {
-      padding: 60px 16px;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 13px;
-    }
-
-    .incident-row {
-      background: rgba(10, 15, 25, 0.6);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .incident-row:hover {
-      background: var(--bg-hover);
-      border-color: rgba(59, 130, 246, 0.4);
-    }
-
-    .incident-row.selected {
-      background: rgba(30, 41, 59, 0.8);
-      border-color: #3b82f6;
-    }
-
-    .incident-left {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      flex: 1;
-      min-width: 0;
-    }
-
-    .incident-rank {
-      font-size: 15px;
-      font-weight: 800;
-      min-width: 14px;
-      padding-top: 2px;
-    }
-
-    .incident-info {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      min-width: 0;
-    }
-
-    .incident-name {
-      font-size: 13px;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .incident-location {
-      font-size: 11px;
-      color: var(--text-secondary);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .incident-score {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 4px 10px;
-      border-radius: 6px;
-      flex-shrink: 0;
-    }
-
-    .score-num {
-      font-size: 16px;
-      font-weight: 800;
-      line-height: 1;
-    }
-
-    .score-label {
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-
-    .score-critical {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      color: var(--color-critical);
-    }
-
-    .score-high {
-      background: rgba(249, 115, 22, 0.15);
-      border: 1px solid rgba(249, 115, 22, 0.4);
-      color: var(--color-high);
-    }
-
-    .score-medium {
-      background: rgba(234, 179, 8, 0.15);
-      border: 1px solid rgba(234, 179, 8, 0.4);
-      color: var(--color-medium);
-    }
-
-    .score-low {
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      color: var(--color-low);
-    }
-
-    /* MAP */
-    #map {
-      width: 100%;
-      height: 100%;
-      background: #0a0d16;
-    }
-
-    #fullmap {
-      width: 100%;
-      height: 100%;
-      background: #0a0d16;
-    }
-
-    /* DETAILS PANEL */
-    .details {
-      padding: 12px 14px;
-      overflow-y: auto;
-      flex: 1;
-    }
-
-    .detail-title {
-      font-size: 14px;
-      font-weight: 800;
-      margin-bottom: 8px;
-    }
-
-    .detail-priority {
-      display: inline-block;
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      color: var(--color-critical);
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-
-    .detail-section {
-      font-size: 10.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin: 12px 0 6px;
-      letter-spacing: 0.5px;
-    }
-
-    .detail-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      padding: 6px 0;
-      border-bottom: 1px solid rgba(30, 41, 59, 0.5);
-    }
-
-    .detail-row:last-child {
-      border: none;
-    }
-
-    .detail-label {
-      color: var(--text-secondary);
-    }
-
-    .detail-value {
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .detail-link {
-      color: #60a5fa;
-      text-decoration: none;
-      font-weight: 700;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 170px;
-      display: inline-block;
-    }
-
-    .detail-link:hover {
-      color: #93c5fd;
-      text-decoration: underline;
-    }
-
-    .nearby-aid-card {
-      background: rgba(10, 15, 25, 0.48);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px;
-      margin-bottom: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .nearby-aid-title {
-      font-size: 11px;
-      font-weight: 800;
-      color: white;
-    }
-
-    .nearby-aid-meta {
-      font-size: 10px;
-      color: var(--text-secondary);
-      line-height: 1.45;
-    }
-
-    .detail-empty {
-      padding: 60px 16px;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 13px;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border);
-    }
-
-    .btn {
-      flex: 1;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.15s;
-    }
-
-    .btn-arrive {
-      background: #3b82f6;
-      color: white;
-    }
-
-    .btn-arrive:hover {
-      background: #2563eb;
-    }
-
-    .btn-complete {
-      background: var(--color-low);
-      color: white;
-    }
-
-    .btn-complete:hover {
-      background: #059669;
-    }
-
-    /* FULLPAGE VIEWS */
-    .fullpage {
-      padding: 12px;
-      overflow-y: auto;
-    }
-
-    .fullpage-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      height: 100%;
-    }
-
-    .fullpage-header {
-      font-size: 15px;
-      font-weight: 800;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .table-container {
-      overflow-x: auto;
-      height: 100%;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-
-    th {
-      background: #1e293b;
-      color: var(--text-secondary);
-      font-weight: 700;
-      text-transform: uppercase;
-      font-size: 10px;
-      padding: 10px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-
-    td {
-      padding: 10px;
-      border-bottom: 1px solid var(--border);
-      color: var(--text-primary);
-    }
-
-    tr:hover {
-      background: rgba(30, 41, 59, 0.4);
-    }
-
-    /* INGEST MODAL */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(4px);
-      z-index: 2000;
-      display: none;
-      justify-content: flex-end;
-    }
-
-    .modal-content {
-      width: 420px;
-      height: 100%;
-      background: var(--bg-sidebar);
-      border-left: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      gap: 14px;
-      overflow-y: auto;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 12px;
-    }
-
-    .modal-header h3 {
-      font-size: 14px;
-      font-weight: 800;
-    }
-
-    .close-btn {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 18px;
-    }
-
-    .close-btn:hover {
-      color: white;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .form-group label {
-      font-size: 11.5px;
-      color: var(--text-secondary);
-      font-weight: 600;
-    }
-
-    input[type="text"],
-    input[type="number"],
-    select,
-    textarea {
-      background: #131926;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 12px;
-      color: white;
-      font-size: 12px;
-      font-family: var(--font);
-      outline: none;
-    }
-
-    input:focus,
-    select:focus,
-    textarea:focus {
-      border-color: #3b82f6;
-    }
-
-    textarea {
-      resize: vertical;
-    }
-
-    .submit-btn {
-      width: 100%;
-      padding: 10px;
-      background: var(--color-critical);
-      border: none;
-      border-radius: 6px;
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    .submit-btn:hover {
-      background: #dc2626;
-    }
-
-    .checkbox-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      cursor: pointer;
-    }
-
-    /* CHATBOT */
-    .chatbot-toggle {
-      position: fixed;
-      right: 18px;
-      bottom: 18px;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      background: linear-gradient(135deg, #ef4444, #991b1b);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
-      z-index: 2500;
-    }
-
-    .chatbot-panel {
-      position: fixed;
-      right: 18px;
-      bottom: 86px;
-      width: 340px;
-      height: 440px;
-      background: #0f172a;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
-      display: none;
-      flex-direction: column;
-      overflow: hidden;
-      z-index: 2500;
-    }
-
-    .chatbot-panel.open {
-      display: flex;
-    }
-
-    .chatbot-header {
-      padding: 12px 14px;
-      background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(30, 41, 59, 0.85));
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .chatbot-close {
-      background: none;
-      border: none;
-      color: white;
-      cursor: pointer;
-      font-size: 18px;
-    }
-
-    .chatbot-body {
-      flex: 1;
-      padding: 12px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      background: rgba(10, 15, 25, 0.75);
-    }
-
-    .chat-msg {
-      max-width: 85%;
-      padding: 10px 12px;
-      border-radius: 10px;
-      font-size: 12px;
-      line-height: 1.4;
-      white-space: pre-line;
-    }
-
-    .chat-msg.bot {
-      background: #131926;
-      border: 1px solid var(--border);
-      color: var(--text-primary);
-      align-self: flex-start;
-    }
-
-    .chat-msg.user {
-      background: rgba(239, 68, 68, 0.18);
-      border: 1px solid rgba(239, 68, 68, 0.35);
-      color: white;
-      align-self: flex-end;
-    }
-
-    .chatbot-input-row {
-      display: flex;
-      gap: 8px;
-      padding: 10px;
-      border-top: 1px solid var(--border);
-      background: #0b1220;
-    }
-
-    .chatbot-input {
-      flex: 1;
-      background: #131926;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: white;
-      padding: 8px 10px;
-      font-size: 12px;
-      outline: none;
-    }
-
-    .chatbot-send {
-      background: var(--color-critical);
-      border: none;
-      border-radius: 8px;
-      color: white;
-      padding: 8px 10px;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    /* KPI CARDS */
-    .kpi-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      padding: 12px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .kpi-card {
-      background: rgba(10, 15, 25, 0.6);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .kpi-value {
-      font-size: 20px;
-      font-weight: 800;
-    }
-
-    .kpi-label {
-      font-size: 10px;
-      color: var(--text-secondary);
-    }
-
-    @keyframes spin {
-      from {
-        transform: rotate(0deg);
-      }
-
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    .spin {
-      animation: spin 1s linear infinite;
-      display: inline-block;
-    }
-    @keyframes pulse {
-      0% { opacity: 0.4; }
-      50% { opacity: 1; }
-      100% { opacity: 0.4; }
-    }
-  </style>
-</head>
-
-<body>
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="logo">
-      <div class="logo-icon">
-        <i data-lucide="shield-alert" style="width: 18px; height: 18px;"></i>
-      </div>
-      <div class="logo-text">PRATHAMIKTA</div>
+{% extends 'core/base.html' %}
+
+{% block title %}PRATHAMIKTA - EOC Dispatch Dashboard{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+<div class="view active" id="view-dashboard">
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-value" id="kpi-critical" style="color: var(--color-critical);">0</div>
+      <div class="kpi-label">Critical</div>
     </div>
-
-    <div class="nav-section">
-      <a class="nav-item active" id="nav-dashboard" onclick="switchView('dashboard')">
-        <i data-lucide="layout-dashboard" style="width: 16px;"></i>
-        Dashboard
-      </a>
-      <a class="nav-item" id="nav-queue" onclick="switchView('queue')">
-        <i data-lucide="list" style="width: 16px;"></i>
-        All Incidents
-      </a>
-      <a class="nav-item" id="nav-fullmap" onclick="switchView('fullmap')">
-        <i data-lucide="map" style="width: 16px;"></i>
-        Full Map
-      </a>
-      <a class="nav-item" id="nav-reports" onclick="switchView('reports')">
-        <i data-lucide="file-text" style="width: 16px;"></i>
-        Reports
-      </a>
-      <a class="nav-item" id="nav-sync-feeds" onclick="syncLiveFeeds()"
-        style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; color: #60a5fa;">
-        <i data-lucide="refresh-cw" style="width: 16px; color: #60a5fa;"></i>
-        Sync Live Feeds
-      </a>
+    <div class="kpi-card">
+      <div class="kpi-value" id="kpi-high" style="color: var(--color-high);">0</div>
+      <div class="kpi-label">High Priority</div>
     </div>
-
-    <button class="footer-btn" onclick="openIngestModal()">
-      <i data-lucide="plus" style="width: 14px;"></i>
-      Ingest Signal
-    </button>
-  </div>
-
-  <!-- MAIN CONTENT -->
-  <div class="main">
-    <!-- HEADER -->
-    <div class="header">
-      <div class="header-left">
-        <div class="alert-pill">
-          <div class="badge-count" id="alert-count">3</div>
-          <span>Active Incidents</span>
-        </div>
-      </div>
-
-      <div class="header-right">
-        <span id="live-time">14:35</span>
-        <span style="font-size: 10px; background: #1e2638; padding: 2px 6px; border-radius: 3px;">NPT</span>
-        <div class="status-online">
-          <div class="status-dot"></div>
-          <span>System Online</span>
-        </div>
-      </div>
+    <div class="kpi-card">
+      <div class="kpi-value" id="kpi-medium" style="color: var(--color-medium);">0</div>
+      <div class="kpi-label">Medium</div>
     </div>
-
-    <!-- VIEWS -->
-    <div class="views">
-      <!-- DASHBOARD VIEW -->
-      <div class="view active" id="view-dashboard">
-        <div class="kpi-row">
-          <div class="kpi-card">
-            <div class="kpi-value" id="kpi-critical" style="color: var(--color-critical);">0</div>
-            <div class="kpi-label">Critical</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-value" id="kpi-high" style="color: var(--color-high);">0</div>
-            <div class="kpi-label">High Priority</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-value" id="kpi-medium" style="color: var(--color-medium);">0</div>
-            <div class="kpi-label">Medium</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-value" id="kpi-total" style="color: white;">0</div>
-            <div class="kpi-label">Total</div>
-          </div>
-        </div>
-
-        <div class="dashboard-grid">
-          <!-- LEFT SIDEBAR PANELS -->
-          <div style="display: flex; flex-direction: column; gap: 12px; height: 100%; min-height: 0;">
-            <!-- PRIORITY QUEUE -->
-            <div class="panel" style="flex: 3; min-height: 0;">
-              <div class="panel-header">
-                Priority Queue
-              </div>
-              <div class="queue" id="queue-list"></div>
-            </div>
-
-            <!-- LIVE FEEDS -->
-            <div class="panel" style="flex: 2; min-height: 0;">
-              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <span>Live External Feeds (GDACS / RSS)</span>
-                <i data-lucide="activity" style="width: 14px; color: #f59e0b; animation: pulse 2s infinite;"></i>
-              </div>
-              <div class="queue" id="live-feeds-list"></div>
-            </div>
-          </div>
-
-          <!-- MAP -->
-          <div class="panel">
-            <div class="panel-header">Live Locations</div>
-            <div id="map" style="flex: 1;"></div>
-          </div>
-
-          <!-- DETAILS -->
-          <div class="panel">
-            <div class="panel-header">Details</div>
-            <div class="details" id="details-panel">
-              <div class="detail-empty">Select an incident to view details</div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ALL INCIDENTS QUEUE VIEW -->
-      <div class="view" id="view-queue">
-        <div class="fullpage">
-          <div class="fullpage-card">
-            <div class="fullpage-header">
-              <span>All Disaster Incidents</span>
-              <button class="footer-btn" style="width: auto;" onclick="openIngestModal()">
-                <i data-lucide="plus" style="width: 14px;"></i> Add
-              </button>
-            </div>
-            <div class="table-container">
-              <table id="queue-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Hazard & Location</th>
-                    <th>Score</th>
-                    <th>Level</th>
-                    <th>Reports</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody id="queue-tbody"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- FULL MAP VIEW -->
-      <div class="view" id="view-fullmap">
-        <div style="padding: 12px; height: 100%;">
-          <div class="fullpage-card" style="border-radius: 8px;">
-            <div id="fullmap"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- REPORTS VIEW -->
-      <div class="view" id="view-reports">
-        <div class="fullpage">
-          <div class="fullpage-card">
-            <div class="fullpage-header">
-              <span>Raw Disaster Reports & Signals Database</span>
-              <input type="text" id="report-search" placeholder="Search reports..."
-                style="width: 220px; padding: 6px 10px; background: #131926; border: 1px solid var(--border); border-radius: 6px; color: white; font-size: 12px;"
-                onkeyup="filterReports()" />
-            </div>
-            <div class="table-container">
-              <table id="reports-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Source</th>
-                    <th>Hazard</th>
-                    <th>Location</th>
-                    <th>Description</th>
-                    <th>Severity</th>
-                    <th>Time</th>
-                  </tr>
-                </thead>
-                <tbody id="reports-tbody"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="kpi-card">
+      <div class="kpi-value" id="kpi-total" style="color: white;">0</div>
+      <div class="kpi-label">Total</div>
     </div>
   </div>
 
-  <!-- CHATBOT -->
-  <button class="chatbot-toggle" id="chatbot-toggle" onclick="toggleChatbot()" aria-label="Open chatbot">
-    <i data-lucide="message-circle" style="width: 22px; height: 22px;"></i>
-  </button>
-
-  <div class="chatbot-panel" id="chatbot-panel">
-    <div class="chatbot-header">
-      <span>PRATHAMIKTA AI Assistant</span>
-      <button class="chatbot-close" onclick="toggleChatbot()">×</button>
-    </div>
-    <div class="chatbot-body" id="chatbot-body">
-      <div class="chat-msg bot">👋 Hello! Ask me for disaster statistics, the highest priority site, or the priority
-        formula.</div>
-    </div>
-    <div class="chatbot-input-row">
-      <input class="chatbot-input" id="chatbot-input" type="text" placeholder="Ask about incidents..." />
-      <button class="chatbot-send" onclick="sendChatbotMessage()">Send</button>
-    </div>
-  </div>
-
-  <!-- INGEST MODAL -->
-  <div class="modal-overlay" id="ingest-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>➕ Ingest Disaster Signal</h3>
-        <button class="close-btn" onclick="closeIngestModal()">&times;</button>
+  <div class="dashboard-grid">
+    <!-- LEFT SIDEBAR PANELS -->
+    <div style="display: flex; flex-direction: column; gap: 12px; height: 100%; min-height: 0;">
+      <!-- PRIORITY QUEUE -->
+      <div class="panel" style="flex: 3; min-height: 0;">
+        <div class="panel-header">
+          Priority Queue
+        </div>
+        <div class="queue" id="queue-list"></div>
       </div>
 
-      <form id="ingest-form" onsubmit="submitSignal(event)">
-        <div class="form-group">
-          <label>Source</label>
-          <select id="source-type" required>
-            <option value="call_center">📞 Disaster Call (911/115)</option>
-            <option value="sensor">📡 GDACS Sensor Alert</option>
-            <option value="social_media">📱 Social Media Post</option>
-            <option value="news">📰 News RSS Feed</option>
-          </select>
+      <!-- LIVE FEEDS -->
+      <div class="panel" style="flex: 2; min-height: 0;">
+        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>Live External Feeds (GDACS / RSS)</span>
+          <i data-lucide="activity" style="width: 14px; color: #f59e0b; animation: pulse 2s infinite;"></i>
         </div>
+        <div class="queue" id="live-feeds-list"></div>
+      </div>
+    </div>
 
-        <div class="form-group">
-          <label>Hazard Type</label>
-          <select id="hazard-type" required>
-            <option value="Flood">Flood</option>
-            <option value="Landslide">Landslide</option>
-            <option value="Earthquake">Earthquake</option>
-            <option value="Fire">Fire</option>
-          </select>
-        </div>
+    <!-- MAP -->
+    <div class="panel">
+      <div class="panel-header">Live Locations</div>
+      <div id="map" style="flex: 1;"></div>
+    </div>
 
-        <div class="form-group">
-          <label>Location</label>
-          <input type="text" id="location" placeholder="e.g. Khokana, Lalitpur" required />
-        </div>
-
-        <div class="form-group">
-          <label>District</label>
-          <select id="district" required>
-            <option value="lalitpur">Lalitpur</option>
-            <option value="kathmandu">Kathmandu</option>
-            <option value="bhaktapur">Bhaktapur</option>
-            <option value="kaski">Kaski (Pokhara)</option>
-            <option value="chitwan">Chitwan</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Description</label>
-          <textarea id="description" rows="3" placeholder="Enter report details..." required></textarea>
-        </div>
-
-        <div class="form-group">
-          <label>Severity (1-10)</label>
-          <input type="number" id="severity" min="1" max="10" value="7" required />
-        </div>
-
-        <div class="checkbox-group">
-          <input type="checkbox" id="life-threat" checked />
-          <label for="life-threat" style="font-size: 12px; margin: 0; color: var(--color-critical); font-weight: 700;">
-            Life-threatening situation
-          </label>
-        </div>
-
-        <button type="submit" class="submit-btn">
-          <i data-lucide="send" style="width: 14px;"></i> Ingest & Triage
-        </button>
-      </form>
+    <!-- DETAILS -->
+    <div class="panel">
+      <div class="panel-header">Details</div>
+      <div class="details" id="details-panel">
+        <div class="detail-empty">Select an incident to view details</div>
+      </div>
     </div>
   </div>
+</div>
+{% endblock %}
 
-  <script>
-    let incidents = [];
-    let allRawSignals = [];
-    let selectedIncId = null;
-    let map = null;
-    let fullmap = null;
-    let nearbyAidLayer = null;
-    let fullMapNearbyAidLayer = null;
-    const districtCoords = {
-      lalitpur: { lat: 27.632, lng: 85.295 },
-      kathmandu: { lat: 27.717, lng: 85.324 },
-      bhaktapur: { lat: 27.671, lng: 85.429 },
-      kaski: { lat: 28.209, lng: 83.985 },
-      chitwan: { lat: 27.678, lng: 84.432 }
-    };
+{% block extra_js %}
+<script>
+  let map = null;
+  let nearbyAidLayer = null;
 
-    let liveFeeds = [];
-    let feedMarkers = [];
+  document.addEventListener('DOMContentLoaded', () => {
+    initMap();
+    fetchIncidents();
+    fetchLiveFeeds();
+    setInterval(fetchLiveFeeds, 30000);
+  });
 
-    async function fetchLiveFeeds() {
-      try {
-        const response = await fetch('/api/feeds/gdacs/');
-        const data = await response.json();
-        if (data.success) {
-          liveFeeds = data.alerts || [];
-          renderLiveFeeds();
-          renderFeedMapMarkers();
-        }
-      } catch (err) {
-        console.error("Error fetching live feeds:", err);
-      }
-    }
+  function initMap() {
+    map = L.map('map', { center: [28.1, 84.4], zoom: 8, zoomControl: false, attributionControl: false });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(map);
+    nearbyAidLayer = L.layerGroup().addTo(map);
+  }
 
-    function renderLiveFeeds() {
-      const container = document.getElementById('live-feeds-list');
-      container.innerHTML = '';
+  async function fetchIncidents() {
+    try {
+      const response = await fetch('/api/incidents/');
+      const data = await response.json();
+      const rawIncidents = data.incidents || [];
+      incidents = rawIncidents.filter(i => i.status !== 'resolved' && i.status !== 'dismissed');
 
-      if (liveFeeds.length === 0) {
-        container.innerHTML = '<div class="queue-empty">📡 No external feed alerts found</div>';
-        return;
+      if (incidents.length > 0 && (!selectedIncId || !incidents.some(i => i.id === selectedIncId))) {
+        selectedIncId = incidents[0].id;
+      } else if (incidents.length === 0) {
+        selectedIncId = null;
       }
 
-      liveFeeds.forEach((feed) => {
-        const row = document.createElement('div');
-        row.className = 'incident-row';
-        row.style.borderLeft = '3px solid #f59e0b';
-        row.style.cursor = 'pointer';
-        row.onclick = () => {
-          if (feed.lat && feed.lng && map) {
-            map.setView([feed.lat, feed.lng], 10);
-          }
-        };
-        
-        const sourceLabel = feed.sourceType === 'sensor' ? '📡 GDACS' : '📰 News RSS';
-        
-        row.innerHTML = `
-          <div class="incident-left">
-            <div class="incident-info">
-              <div class="incident-name" style="color: #f59e0b; font-size: 11px; font-weight: 700;">${feed.title}</div>
-              <div class="incident-location">📍 ${feed.locationName}</div>
-            </div>
-          </div>
-          <div style="font-size: 8px; padding: 2px 4px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 4px; color: #f59e0b; font-weight: 700; flex-shrink: 0;">
-            ${sourceLabel}
-          </div>
-        `;
-        
-        container.appendChild(row);
-      });
-      lucide.createIcons();
-    }
-
-    function renderFeedMapMarkers() {
-      if (!map) return;
-      feedMarkers.forEach(m => m.remove());
-      feedMarkers = [];
-
-      liveFeeds.forEach(feed => {
-        if (!feed.lat || !feed.lng) return;
-
-        const marker = L.circleMarker([feed.lat, feed.lng], {
-          radius: 6,
-          fillColor: '#f59e0b',
-          color: '#fff',
-          weight: 1.5,
-          fillOpacity: 0.8
-        }).addTo(map);
-
-        marker.bindPopup(`
-          <div style="font-size: 11px; color: #f59e0b; font-weight: bold;">
-            ${feed.sourceType === 'sensor' ? '📡 GDACS Sensor Alert' : '📰 RSS News Feed'}
-          </div>
-          <div style="font-size: 10px; margin-top: 4px;">
-            <strong>${feed.title}</strong><br/>
-            ${feed.locationName}<br/>
-            Severity: ${feed.severity}/10
-          </div>
-        `);
-        
-        feedMarkers.push(marker);
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      lucide.createIcons();
-      initMap();
-      fetchIncidents();
-      fetchLiveFeeds();
-      setInterval(updateTime, 1000);
-      setInterval(fetchLiveFeeds, 30000); // refresh live feeds every 30 seconds
-    });
-
-    function updateTime() {
-      const now = new Date();
-      document.getElementById('live-time').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-
-    function initMap() {
-      map = L.map('map', { center: [28.1, 84.4], zoom: 8, zoomControl: false, attributionControl: false });
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(map);
-      nearbyAidLayer = L.layerGroup().addTo(map);
-    }
-
-    function clearNearbyAidMarkers() {
-      if (nearbyAidLayer) nearbyAidLayer.clearLayers();
-      if (fullMapNearbyAidLayer) fullMapNearbyAidLayer.clearLayers();
-    }
-
-    function drawNearbyAidMarkers(nearbyList, inc, targetLayer = nearbyAidLayer) {
-      if (!targetLayer || !inc) return;
-
-      const baseLat = Number(inc.lat) || 28.1;
-      const baseLng = Number(inc.lng) || 84.4;
-      nearbyList.forEach((item, index) => {
-        const lat = Number(item.lat) || baseLat + 0.015 + (index % 3) * 0.013;
-        const lng = Number(item.lng) || baseLng + ((index % 2 === 0 ? -1 : 1) * (0.015 + Math.floor(index / 3) * 0.013));
-
-        const marker = L.circleMarker([lat, lng], {
-          radius: 6,
-          fillColor: '#3b82f6',
-          color: '#dbeafe',
-          weight: 1.5,
-          fillOpacity: 0.9
-        }).addTo(targetLayer);
-
-        marker.bindPopup(`
-          <div style="font-size:11px; line-height:1.5; max-width:220px;">
-            <strong>${item.title}</strong><br/>
-            <span>Org: ${item.organization}</span><br/>
-            <span>Contact: ${item.contact}</span><br/>
-            <a href="${item.datasetUrl}" target="_blank" rel="noreferrer">Open data source</a>
-          </div>
-        `);
-      });
-    }
-
-    function cleanLocation(locName, districtName) {
-      if (!locName || locName.toLowerCase().includes('unknown') || locName.toLowerCase() === 'reported location') {
-        if (districtName && !districtName.toLowerCase().includes('unknown') && districtName.toLowerCase() !== 'general') {
-          return districtName.charAt(0).toUpperCase() + districtName.slice(1) + ' Sector';
-        }
-        return 'Nepal Emergency Site';
-      }
-      return locName;
-    }
-
-    async function fetchIncidents() {
-      try {
-        const response = await fetch('/api/incidents/');
-        const data = await response.json();
-        const rawIncidents = data.incidents || [];
-        incidents = rawIncidents.filter(i => i.status !== 'resolved' && i.status !== 'dismissed');
-
-        if (incidents.length > 0 && (!selectedIncId || !incidents.some(i => i.id === selectedIncId))) {
-          selectedIncId = incidents[0].id;
-        } else if (incidents.length === 0) {
-          selectedIncId = null;
-        }
-
-        updateKPIs();
-        renderQueue();
-        renderMapMarkers();
-        renderDetails();
-        renderQueueTable();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    function updateKPIs() {
-      const critical = incidents.filter(i => (i.manualPriority || i.triageScore) >= 85).length;
-      const high = incidents.filter(i => (i.manualPriority || i.triageScore) >= 65 && (i.manualPriority || i.triageScore) < 85).length;
-      const medium = incidents.filter(i => (i.manualPriority || i.triageScore) < 65).length;
-
-      document.getElementById('alert-count').textContent = incidents.length;
-      document.getElementById('kpi-critical').textContent = critical;
-      document.getElementById('kpi-high').textContent = high;
-      document.getElementById('kpi-medium').textContent = medium;
-      document.getElementById('kpi-total').textContent = incidents.length;
-    }
-
-    function renderQueue() {
-      const container = document.getElementById('queue-list');
-      container.innerHTML = '';
-
-      if (incidents.length === 0) {
-        container.innerHTML = '<div class="queue-empty">✅ No active incidents</div>';
-        return;
-      }
-
-      incidents.forEach((inc, idx) => {
-        const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
-        let scoreClass = 'score-low';
-        let levelText = 'Low';
-
-        if (score >= 85) {
-          scoreClass = 'score-critical';
-          levelText = 'Critical';
-        } else if (score >= 65) {
-          scoreClass = 'score-high';
-          levelText = 'High';
-        } else if (score >= 45) {
-          scoreClass = 'score-medium';
-          levelText = 'Med';
-        }
-
-        const rankColor = idx === 0 ? '#ef4444' : idx === 1 ? '#f97316' : '#eab308';
-        const locDisplay = cleanLocation(inc.locationName, inc.districtId);
-
-        const row = document.createElement('div');
-        row.className = `incident-row ${inc.id === selectedIncId ? 'selected' : ''}`;
-        row.onclick = () => selectIncident(inc.id);
-
-        row.innerHTML = `
-          <button class="incident-check-btn" title="Mark Incident Complete & Remove from Queue" onclick="logComplete('${inc.id}', event)">
-            <i data-lucide="check" style="width: 13px; height: 13px;"></i>
-          </button>
-          <div class="incident-left">
-            <div class="incident-rank" style="color: ${rankColor};">${idx + 1}</div>
-            <div class="incident-info">
-              <div class="incident-name">${inc.disasterType}</div>
-              <div class="incident-location">📍 ${locDisplay}</div>
-            </div>
-          </div>
-          <div class="incident-score ${scoreClass}">
-            <div class="score-num">${score}</div>
-            <div class="score-label">${levelText}</div>
-          </div>
-        `;
-
-        container.appendChild(row);
-      });
-      lucide.createIcons();
-    }
-
-    function renderMapMarkers() {
-      if (!map) return;
-      map.eachLayer(layer => {
-        if (layer instanceof L.CircleMarker) layer.remove();
-      });
-
-      incidents.forEach(inc => {
-        const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
-        let color = '#10b981';
-        if (score >= 85) color = '#ef4444';
-        else if (score >= 65) color = '#f97316';
-        else if (score >= 45) color = '#eab308';
-
-        const isSelected = inc.id === selectedIncId;
-        const marker = L.circleMarker([inc.lat, inc.lng], {
-          radius: isSelected ? 11 : 8,
-          fillColor: color,
-          color: isSelected ? '#fff' : '#000',
-          weight: isSelected ? 2 : 1,
-          fillOpacity: 0.9
-        }).addTo(map);
-
-        marker.bindPopup(`<div style="font-size: 11px;"><strong>${inc.disasterType}</strong><br/>${inc.locationName}<br/>Score: ${score}</div>`);
-        marker.on('click', () => selectIncident(inc.id));
-      });
-    }
-
-    function selectIncident(incId) {
-      selectedIncId = incId;
-      renderQueue();
-      renderMapMarkers();
-      renderDetails();
-    }
-
-    function renderDetails() {
-      const panel = document.getElementById('details-panel');
-      const inc = incidents.find(i => i.id === selectedIncId);
-
-      if (!inc) {
-        panel.innerHTML = '<div class="detail-empty">Select an incident to view details</div>';
-        return;
-      }
-
-      const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
-      const isArrived = inc.status === 'rescuers_arrived';
-      const sourceRows = (inc.reports || []).map((report, index) => {
-        const sourceLabel = {
-          call_center: '📞 Call Center',
-          sensor: '📡 GDACS Sensor',
-          social_media: '📱 Social Media',
-          news: '📰 News RSS'
-        }[report.sourceType] || '📡 Source';
-
-        const sourceMeta = report.meta || {};
-        const sourceUrl = sourceMeta.url || sourceMeta.link || sourceMeta.sourceUrl || '';
-        const sourceName = sourceMeta.platform || sourceMeta.sensorName || sourceMeta.callerName || sourceMeta.username || `Entry ${index + 1}`;
-        const sourceText = sourceUrl
-          ? `<a class="detail-link" href="${sourceUrl}" target="_blank" rel="noreferrer">${sourceName}</a>`
-          : `<span class="detail-value">${sourceName}</span>`;
-
-        return `
-          <div class="detail-row">
-            <span class="detail-label">${sourceLabel}</span>
-            <span class="detail-value">${sourceText}</span>
-          </div>
-        `;
-      }).join('');
-
-      panel.innerHTML = `
-        <div class="detail-title">${inc.disasterType}</div>
-        <div class="detail-priority">${inc.triageLevel.toUpperCase()} (${score}/100)</div>
-
-        <div class="detail-section">Location & Info</div>
-        <div class="detail-row">
-          <span class="detail-label">📍 Place</span>
-          <span class="detail-value">${inc.locationName}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">⏱️ Reported</span>
-          <span class="detail-value">${new Date(inc.firstReported).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-        </div>
-
-        <div class="detail-section">Priority Scoring</div>
-        <div class="detail-row">
-          <span class="detail-label">Formula Score</span>
-          <span class="detail-value">${inc.formulaScore || Math.round(score * 0.95)}/100</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">AI Suggestion</span>
-          <span class="detail-value">${inc.aiSuggestedScore || score}/100</span>
-        </div>
-
-        <div class="detail-section">Status</div>
-        <div class="detail-row">
-          <span class="detail-label">Rescuer Status</span>
-          <span class="detail-value" style="color: ${isArrived ? '#10b981' : '#f97316'};">
-            ${isArrived ? '🚑 On-Site' : '⏳ Dispatched'}
-          </span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Reports</span>
-          <span class="detail-value">${inc.reports ? inc.reports.length : 1}</span>
-        </div>
-
-        <div class="detail-section">Data Sources</div>
-        ${sourceRows || `
-          <div class="detail-row">
-            <span class="detail-label">Source</span>
-            <span class="detail-value">No source references available</span>
-          </div>
-        `}
-
-        <div class="detail-section">Nearby Volunteer / Aid Layer</div>
-        <div id="nearby-aid-panel-${inc.id}">
-          <div class="detail-row">
-            <span class="detail-label">Live lookup</span>
-            <span class="detail-value">Loading nearby agencies…</span>
-          </div>
-        </div>
-
-        <div class="action-buttons">
-          ${!isArrived ? `
-            <button class="btn btn-arrive" onclick="logArrival('${inc.id}')">
-              <i data-lucide="truck" style="width: 12px;"></i> Arrived
-            </button>
-          ` : `
-            <button class="btn btn-complete" onclick="logComplete('${inc.id}')">
-              <i data-lucide="check" style="width: 12px;"></i> Complete
-            </button>
-          `}
-        </div>
-      `;
-
-      lucide.createIcons();
-      loadNearbyAidLayer(inc);
-    }
-
-    async function loadNearbyAidLayer(inc) {
-      const targetId = `nearby-aid-panel-${inc.id}`;
-      const panel = document.getElementById(targetId);
-      if (!panel) return;
-
-      try {
-        const response = await fetch('/api/nearby/aid/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            lat: inc.lat,
-            lng: inc.lng,
-            district: inc.districtId,
-            location: inc.locationName
-          })
-        });
-        const data = await response.json();
-
-        clearNearbyAidMarkers();
-
-        if (!data.success || !data.nearby || data.nearby.length === 0) {
-          panel.innerHTML = `
-            <div class="detail-row">
-              <span class="detail-label">Live response</span>
-              <span class="detail-value">No nearby aid records returned from live HDX search.</span>
-            </div>
-          `;
-          return;
-        }
-
-        drawNearbyAidMarkers(data.nearby, inc, nearbyAidLayer);
-        if (fullMapNearbyAidLayer) {
-          drawNearbyAidMarkers(data.nearby, inc, fullMapNearbyAidLayer);
-        }
-
-        const markers = data.nearby.map(item => `
-          <div class="nearby-aid-card">
-            <div class="nearby-aid-title">${item.title}</div>
-            <div class="nearby-aid-meta"><strong>Organization:</strong> ${item.organization}</div>
-            <div class="nearby-aid-meta"><strong>Contact:</strong> ${item.contact}</div>
-            <div class="nearby-aid-meta"><strong>Live Source:</strong> <a class="detail-link" href="${item.datasetUrl}" target="_blank" rel="noreferrer">Open dataset</a></div>
-            ${item.notes ? `<div class="nearby-aid-meta">${item.notes}</div>` : ''}
-          </div>
-        `).join('');
-
-        panel.innerHTML = `
-          <div class="detail-row">
-            <span class="detail-label">Nearby resources</span>
-            <span class="detail-value">${data.resourceCount} live HDX records</span>
-          </div>
-          ${markers}
-        `;
-      } catch (err) {
-        console.error(err);
-        panel.innerHTML = `
-          <div class="detail-row">
-            <span class="detail-label">Live response</span>
-            <span class="detail-value">Nearby aid lookup is temporarily unavailable.</span>
-          </div>
-        `;
-      }
-    }
-
-    function renderQueueTable() {
-      const tbody = document.getElementById('queue-tbody');
-      tbody.innerHTML = '';
-
-      incidents.forEach((inc, idx) => {
-        const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${idx + 1}</td>
-          <td><strong>${inc.disasterType}</strong> - ${inc.locationName}</td>
-          <td>${score}</td>
-          <td>${inc.triageLevel}</td>
-          <td>${inc.reports ? inc.reports.length : 1}</td>
-          <td>${inc.status === 'rescuers_arrived' ? '🚑 On-Site' : '⏳ Active'}</td>
-          <td>
-            ${inc.status !== 'rescuers_arrived' ? `
-              <button style="padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;" onclick="logArrival('${inc.id}')">
-                Arrived
-              </button>
-            ` : `
-              <button style="padding: 4px 8px; background: #10b981; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;" onclick="logComplete('${inc.id}')">
-                Done
-              </button>
-            `}
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    async function logArrival(incId) {
-      try {
-        const response = await fetch(`/api/incidents/${incId}/override/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'rescuers_arrived' })
-        });
-        const data = await response.json();
-        if (data.success) fetchIncidents();
-      } catch (err) { console.error(err); }
-    }
-
-    async function logComplete(incId, event) {
-      if (event && event.stopPropagation) event.stopPropagation();
-      incidents = incidents.filter(i => i.id !== incId);
-      if (selectedIncId === incId) {
-        selectedIncId = incidents.length > 0 ? incidents[0].id : null;
-      }
       updateKPIs();
       renderQueue();
       renderMapMarkers();
       renderDetails();
-      renderQueueTable();
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
-      try {
-        const response = await fetch(`/api/incidents/${incId}/override/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'resolved' })
-        });
-        const data = await response.json();
-        if (data.success) {
-          fetchIncidents();
-        }
-      } catch (err) { console.error(err); }
+  function updateKPIs() {
+    const critical = incidents.filter(i => (i.manualPriority || i.triageScore) >= 85).length;
+    const high = incidents.filter(i => (i.manualPriority || i.triageScore) >= 65 && (i.manualPriority || i.triageScore) < 85).length;
+    const medium = incidents.filter(i => (i.manualPriority || i.triageScore) < 65).length;
+
+    updateAlertCount(incidents.length);
+    document.getElementById('kpi-critical').textContent = critical;
+    document.getElementById('kpi-high').textContent = high;
+    document.getElementById('kpi-medium').textContent = medium;
+    document.getElementById('kpi-total').textContent = incidents.length;
+  }
+
+  function renderQueue() {
+    const container = document.getElementById('queue-list');
+    container.innerHTML = '';
+
+    if (incidents.length === 0) {
+      container.innerHTML = '<div class="queue-empty">✅ No active incidents</div>';
+      return;
     }
 
-    async function syncLiveFeeds() {
-      const syncBtn = document.getElementById('nav-sync-feeds');
-      const originalHtml = syncBtn.innerHTML;
-      syncBtn.style.pointerEvents = 'none';
-      syncBtn.innerHTML = `<i data-lucide="refresh-cw" class="spin" style="width: 16px; color: #60a5fa;"></i> Syncing...`;
-      lucide.createIcons();
+    incidents.forEach((inc, idx) => {
+      const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
+      let scoreClass = 'score-low';
+      let levelText = 'Low';
 
-      try {
-        const response = await fetch('/api/feeds/gdacs/sync/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        const data = await response.json();
-        if (data.success) {
-          alert(`Successfully ingested ${data.count} real-time signals!`);
-          fetchIncidents();
-          fetchLiveFeeds();
-          if (document.getElementById('view-reports').classList.contains('active')) {
-            fetchReports();
-          }
-        } else {
-          alert(`Error syncing: ${data.error || 'Unknown error'}`);
-        }
-      } catch (err) {
-        console.error(err);
-        alert('Failed to connect to sync API.');
-      } finally {
-        syncBtn.style.pointerEvents = 'auto';
-        syncBtn.innerHTML = originalHtml;
-        lucide.createIcons();
+      if (score >= 85) {
+        scoreClass = 'score-critical';
+        levelText = 'Critical';
+      } else if (score >= 65) {
+        scoreClass = 'score-high';
+        levelText = 'High';
+      } else if (score >= 45) {
+        scoreClass = 'score-medium';
+        levelText = 'Med';
       }
-    }
 
-    function switchView(viewName) {
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-      document.getElementById(`view-${viewName}`).classList.add('active');
+      const rankColor = idx === 0 ? '#ef4444' : idx === 1 ? '#f97316' : '#eab308';
+      const locDisplay = cleanLocation(inc.locationName, inc.districtId);
 
-      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      document.getElementById(`nav-${viewName}`).classList.add('active');
+      const row = document.createElement('div');
+      row.className = `incident-row ${inc.id === selectedIncId ? 'selected' : ''}`;
+      row.onclick = () => selectIncident(inc.id);
 
-      if (viewName === 'fullmap') {
-        initFullMap();
-        setTimeout(() => {
-          if (fullmap) fullmap.invalidateSize();
-        }, 120);
-      } else if (viewName === 'reports') {
-        fetchReports();
-      }
-    }
+      row.innerHTML = `
+        <button class="incident-check-btn" title="Mark Incident Complete & Remove from Queue" onclick="logComplete('${inc.id}', event)">
+          <i data-lucide="check" style="width: 13px; height: 13px;"></i>
+        </button>
+        <div class="incident-left">
+          <div class="incident-rank" style="color: ${rankColor};">${idx + 1}</div>
+          <div class="incident-info">
+            <div class="incident-name">${inc.disasterType}</div>
+            <div class="incident-location">📍 ${locDisplay}</div>
+          </div>
+        </div>
+        <div class="incident-score ${scoreClass}">
+          <div class="score-num">${score}</div>
+          <div class="score-label">${levelText}</div>
+        </div>
+      `;
 
-    function initFullMap() {
-      if (fullmap) return;
-      fullmap = L.map('fullmap', { center: [28.1, 84.4], zoom: 7, zoomControl: true, attributionControl: false });
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(fullmap);
-      fullMapNearbyAidLayer = L.layerGroup().addTo(fullmap);
+      container.appendChild(row);
+    });
+    lucide.createIcons();
+  }
 
-      setTimeout(() => {
-        fullmap.invalidateSize();
-        incidents.forEach(inc => {
-          const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
-          let color = '#10b981';
-          if (score >= 85) color = '#ef4444';
-          else if (score >= 65) color = '#f97316';
-
-          const marker = L.circleMarker([inc.lat, inc.lng], {
-            radius: 10,
-            fillColor: color,
-            color: '#fff',
-            weight: 2,
-            fillOpacity: 0.9
-          }).addTo(fullmap);
-
-          const locName = cleanLocation(inc.locationName, inc.districtId);
-          marker.bindPopup(`<strong>${inc.disasterType}</strong><br/>${locName}<br/>Score: ${score}`);
-        });
-      }, 120);
-    }
-
-    function toggleChatbot() {
-      const panel = document.getElementById('chatbot-panel');
-      panel.classList.toggle('open');
-    }
-
-    function appendChatMessage(text, sender = 'bot') {
-      const body = document.getElementById('chatbot-body');
-      const msg = document.createElement('div');
-      msg.className = `chat-msg ${sender}`;
-      msg.textContent = text;
-      body.appendChild(msg);
-      body.scrollTop = body.scrollHeight;
-    }
-
-    async function sendChatbotMessage() {
-      const input = document.getElementById('chatbot-input');
-      const message = input.value.trim();
-      if (!message) return;
-
-      appendChatMessage(message, 'user');
-      input.value = '';
-
-      try {
-        const response = await fetch('/api/chatbot/query/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message })
-        });
-        const data = await response.json();
-        const reply = data.reply || 'I could not generate a response right now.';
-        appendChatMessage(reply, 'bot');
-      } catch (err) {
-        appendChatMessage('Sorry, the chatbot service is unavailable right now.', 'bot');
-        console.error(err);
-      }
-    }
-
-    document.getElementById('chatbot-input').addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') {
-        sendChatbotMessage();
-      }
+  function renderMapMarkers() {
+    if (!map) return;
+    map.eachLayer(layer => {
+      if (layer instanceof L.CircleMarker) layer.remove();
     });
 
-    function openIngestModal() {
-      document.getElementById('ingest-modal').style.display = 'flex';
+    incidents.forEach(inc => {
+      const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
+      let color = '#10b981';
+      if (score >= 85) color = '#ef4444';
+      else if (score >= 65) color = '#f97316';
+      else if (score >= 45) color = '#eab308';
+
+      const isSelected = inc.id === selectedIncId;
+      const marker = L.circleMarker([inc.lat, inc.lng], {
+        radius: isSelected ? 11 : 8,
+        fillColor: color,
+        color: isSelected ? '#fff' : '#000',
+        weight: isSelected ? 2 : 1,
+        fillOpacity: 0.9
+      }).addTo(map);
+
+      marker.bindPopup(`<div style="font-size: 11px;"><strong>${inc.disasterType}</strong><br/>${inc.locationName}<br/>Score: ${score}</div>`);
+      marker.on('click', () => selectIncident(inc.id));
+    });
+  }
+
+  function selectIncident(incId) {
+    selectedIncId = incId;
+    renderQueue();
+    renderMapMarkers();
+    renderDetails();
+  }
+
+  function renderDetails() {
+    const panel = document.getElementById('details-panel');
+    const inc = incidents.find(i => i.id === selectedIncId);
+
+    if (!inc) {
+      panel.innerHTML = '<div class="detail-empty">Select an incident to view details</div>';
+      return;
     }
 
-    function closeIngestModal() {
-      document.getElementById('ingest-modal').style.display = 'none';
+    const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
+    const isArrived = inc.status === 'rescuers_arrived';
+    const sourceRows = (inc.reports || []).map((report, index) => {
+      const sourceLabel = {
+        call_center: '📞 Call Center',
+        sensor: '📡 GDACS Sensor',
+        social_media: '📱 Social Media',
+        news: '📰 News RSS'
+      }[report.sourceType] || '📡 Source';
+
+      const sourceMeta = report.meta || {};
+      const sourceUrl = sourceMeta.url || sourceMeta.link || sourceMeta.sourceUrl || '';
+      const sourceName = sourceMeta.platform || sourceMeta.sensorName || sourceMeta.callerName || sourceMeta.username || `Entry ${index + 1}`;
+      const sourceText = sourceUrl
+        ? `<a class="detail-link" href="${sourceUrl}" target="_blank" rel="noreferrer">${sourceName}</a>`
+        : `<span class="detail-value">${sourceName}</span>`;
+
+      return `
+        <div class="detail-row">
+          <span class="detail-label">${sourceLabel}</span>
+          <span class="detail-value">${sourceText}</span>
+        </div>
+      `;
+    }).join('');
+
+    panel.innerHTML = `
+      <div class="detail-title">${inc.disasterType}</div>
+      <div class="detail-priority">${inc.triageLevel.toUpperCase()} (${score}/100)</div>
+
+      <div class="detail-section">Location & Info</div>
+      <div class="detail-row">
+        <span class="detail-label">📍 Place</span>
+        <span class="detail-value">${inc.locationName}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">⏱️ Reported</span>
+        <span class="detail-value">${new Date(inc.firstReported).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+      </div>
+
+      <div class="detail-section">Priority Scoring</div>
+      <div class="detail-row">
+        <span class="detail-label">Formula Score</span>
+        <span class="detail-value">${inc.formulaScore || Math.round(score * 0.95)}/100</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">AI Suggestion</span>
+        <span class="detail-value">${inc.aiSuggestedScore || score}/100</span>
+      </div>
+
+      <div class="detail-section">Status</div>
+      <div class="detail-row">
+        <span class="detail-label">Rescuer Status</span>
+        <span class="detail-value" style="color: ${isArrived ? '#10b981' : '#f97316'};">
+          ${isArrived ? '🚑 On-Site' : '⏳ Dispatched'}
+        </span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Reports</span>
+        <span class="detail-value">${inc.reports ? inc.reports.length : 1}</span>
+      </div>
+
+      <div class="detail-section">Data Sources</div>
+      ${sourceRows || `
+        <div class="detail-row">
+          <span class="detail-label">Source</span>
+          <span class="detail-value">No source references available</span>
+        </div>
+      `}
+
+      <div class="detail-section">Nearby Volunteer / Aid Layer</div>
+      <div id="nearby-aid-panel-${inc.id}">
+        <div class="detail-row">
+          <span class="detail-label">Live lookup</span>
+          <span class="detail-value">Loading nearby agencies…</span>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        ${!isArrived ? `
+          <button class="btn btn-arrive" onclick="logArrival('${inc.id}')">
+            <i data-lucide="truck" style="width: 12px;"></i> Arrived
+          </button>
+        ` : `
+          <button class="btn btn-complete" onclick="logComplete('${inc.id}')">
+            <i data-lucide="check" style="width: 12px;"></i> Complete
+          </button>
+        `}
+      </div>
+    `;
+
+    lucide.createIcons();
+    loadNearbyAidLayer(inc);
+  }
+
+  async function loadNearbyAidLayer(inc) {
+    const targetId = `nearby-aid-panel-${inc.id}`;
+    const panel = document.getElementById(targetId);
+    if (!panel) return;
+
+    try {
+      const response = await fetch('/api/nearby/aid/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lat: inc.lat,
+          lng: inc.lng,
+          district: inc.districtId,
+          location: inc.locationName
+        })
+      });
+      const data = await response.json();
+
+      if (nearbyAidLayer) nearbyAidLayer.clearLayers();
+
+      if (!data.success || !data.nearby || data.nearby.length === 0) {
+        panel.innerHTML = `
+          <div class="detail-row">
+            <span class="detail-label">Live response</span>
+            <span class="detail-value">No nearby aid records returned from live HDX search.</span>
+          </div>
+        `;
+        return;
+      }
+
+      drawNearbyAidMarkers(data.nearby, inc, nearbyAidLayer);
+
+      const markers = data.nearby.map(item => `
+        <div class="nearby-aid-card">
+          <div class="nearby-aid-title">${item.title}</div>
+          <div class="nearby-aid-meta"><strong>Organization:</strong> ${item.organization}</div>
+          <div class="nearby-aid-meta"><strong>Contact:</strong> ${item.contact}</div>
+          <div class="nearby-aid-meta"><strong>Live Source:</strong> <a class="detail-link" href="${item.datasetUrl}" target="_blank" rel="noreferrer">Open dataset</a></div>
+          ${item.notes ? `<div class="nearby-aid-meta">${item.notes}</div>` : ''}
+        </div>
+      `).join('');
+
+      panel.innerHTML = `
+        <div class="detail-row">
+          <span class="detail-label">Nearby resources</span>
+          <span class="detail-value">${data.resourceCount} live HDX records</span>
+        </div>
+        ${markers}
+      `;
+    } catch (err) {
+      console.error(err);
+      panel.innerHTML = `
+        <div class="detail-row">
+          <span class="detail-label">Live response</span>
+          <span class="detail-value">Nearby aid lookup is temporarily unavailable.</span>
+        </div>
+      `;
+    }
+  }
+
+  function drawNearbyAidMarkers(nearbyList, inc, targetLayer) {
+    if (!targetLayer || !inc) return;
+
+    const baseLat = Number(inc.lat) || 28.1;
+    const baseLng = Number(inc.lng) || 84.4;
+    nearbyList.forEach((item, index) => {
+      const lat = Number(item.lat) || baseLat + 0.015 + (index % 3) * 0.013;
+      const lng = Number(item.lng) || baseLng + ((index % 2 === 0 ? -1 : 1) * (0.015 + Math.floor(index / 3) * 0.013));
+
+      const marker = L.circleMarker([lat, lng], {
+        radius: 6,
+        fillColor: '#3b82f6',
+        color: '#dbeafe',
+        weight: 1.5,
+        fillOpacity: 0.9
+      }).addTo(targetLayer);
+
+      marker.bindPopup(`
+        <div style="font-size:11px; line-height:1.5; max-width:220px;">
+          <strong>${item.title}</strong><br/>
+          <span>Org: ${item.organization}</span><br/>
+          <span>Contact: ${item.contact}</span><br/>
+          <a href="${item.datasetUrl}" target="_blank" rel="noreferrer">Open data source</a>
+        </div>
+      `);
+    });
+  }
+
+  async function fetchLiveFeeds() {
+    try {
+      const response = await fetch('/api/feeds/gdacs/');
+      const data = await response.json();
+      if (data.success) {
+        liveFeeds = data.alerts || [];
+        renderLiveFeeds();
+        renderFeedMapMarkers();
+      }
+    } catch (err) {
+      console.error("Error fetching live feeds:", err);
+    }
+  }
+
+  function renderLiveFeeds() {
+    const container = document.getElementById('live-feeds-list');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (liveFeeds.length === 0) {
+      container.innerHTML = '<div class="queue-empty">📡 No external feed alerts found</div>';
+      return;
     }
 
-    async function submitSignal(e) {
-      e.preventDefault();
-
-      const sourceType = document.getElementById('source-type').value;
-      const hazardType = document.getElementById('hazard-type').value;
-      const location = document.getElementById('location').value;
-      const district = document.getElementById('district').value;
-      const description = document.getElementById('description').value;
-      const severity = parseInt(document.getElementById('severity').value);
-      const isLifeThreat = document.getElementById('life-threat').checked;
-
-      const coords = districtCoords[district] || { lat: 27.7, lng: 85.3 };
-
-      const rawData = {
-        callerName: 'Real-Time Ingest',
-        needType: hazardType,
-        lat: coords.lat + (Math.random() - 0.5) * 0.02,
-        lng: coords.lng + (Math.random() - 0.5) * 0.02,
-        district: district,
-        locationName: location,
-        operatorSeverity: severity,
-        isLifeThreat: isLifeThreat,
-        description: description
+    liveFeeds.forEach((feed) => {
+      const row = document.createElement('div');
+      row.className = 'incident-row';
+      row.style.borderLeft = '3px solid #f59e0b';
+      row.style.cursor = 'pointer';
+      row.onclick = () => {
+        if (feed.lat && feed.lng && map) {
+          map.setView([feed.lat, feed.lng], 10);
+        }
       };
 
-      try {
-        const response = await fetch('/api/signals/ingest/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sourceType, rawData })
-        });
-        const data = await response.json();
-        if (data.success) {
-          closeIngestModal();
-          document.getElementById('ingest-form').reset();
-          fetchIncidents();
-        }
-      } catch (err) { console.error(err); }
-    }
+      const sourceLabel = feed.sourceType === 'sensor' ? '📡 GDACS' : '📰 News RSS';
 
-    async function fetchReports() {
-      try {
-        const response = await fetch('/api/signals/all/');
-        const data = await response.json();
-        allRawSignals = data.signals || [];
-        renderReports(allRawSignals);
-      } catch (err) { console.error(err); }
-    }
+      row.innerHTML = `
+        <div class="incident-left">
+          <div class="incident-info">
+            <div class="incident-name" style="color: #f59e0b; font-size: 11px; font-weight: 700;">${feed.title}</div>
+            <div class="incident-location">📍 ${feed.locationName}</div>
+          </div>
+        </div>
+        <div style="font-size: 8px; padding: 2px 4px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 4px; color: #f59e0b; font-weight: 700; flex-shrink: 0;">
+          ${sourceLabel}
+        </div>
+      `;
 
-    function renderReports(signals) {
-      const tbody = document.getElementById('reports-tbody');
-      tbody.innerHTML = '';
+      container.appendChild(row);
+    });
+    lucide.createIcons();
+  }
 
-      signals.forEach(sig => {
-        const sourceIcon = sig.sourceType === 'call_center' ? '📞 Call Center' :
-          sig.sourceType === 'sensor' ? '📡 GDACS' :
-            sig.sourceType === 'social_media' ? '📱 Social Media' : '📰 News RSS';
+  function renderFeedMapMarkers() {
+    if (!map) return;
+    feedMarkers.forEach(m => m.remove());
+    feedMarkers = [];
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>#${sig.id}</td>
-          <td>${sourceIcon}</td>
-          <td>${sig.disasterType}</td>
-          <td>${cleanLocation(sig.locationName, sig.district)}</td>
-          <td>"${sig.description}"</td>
-          <td><span style="color: ${sig.severity >= 8 ? '#ef4444' : '#f97316'}; font-weight: 700;">${sig.severity}/10</span></td>
-          <td>${new Date(sig.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-        `;
-        tbody.appendChild(tr);
+    liveFeeds.forEach(feed => {
+      if (!feed.lat || !feed.lng) return;
+
+      const marker = L.circleMarker([feed.lat, feed.lng], {
+        radius: 6,
+        fillColor: '#f59e0b',
+        color: '#fff',
+        weight: 1.5,
+        fillOpacity: 0.8
+      }).addTo(map);
+
+      marker.bindPopup(`
+        <div style="font-size: 11px; color: #f59e0b; font-weight: bold;">
+          ${feed.sourceType === 'sensor' ? '📡 GDACS Sensor Alert' : '📰 RSS News Feed'}
+        </div>
+        <div style="font-size: 10px; margin-top: 4px;">
+          <strong>${feed.title}</strong><br/>
+          ${feed.locationName}<br/>
+          Severity: ${feed.severity}/10
+        </div>
+      `);
+
+      feedMarkers.push(marker);
+    });
+  }
+
+  async function logArrival(incId) {
+    try {
+      const response = await fetch(`/api/incidents/${incId}/override/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rescuers_arrived' })
       });
-    }
+      const data = await response.json();
+      if (data.success) fetchIncidents();
+    } catch (err) { console.error(err); }
+  }
 
-    function filterReports() {
-      const query = document.getElementById('report-search').value.toLowerCase();
-      const filtered = allRawSignals.filter(s =>
-        s.description.toLowerCase().includes(query) ||
-        s.locationName.toLowerCase().includes(query) ||
-        s.disasterType.toLowerCase().includes(query)
-      );
-      renderReports(filtered);
+  async function logComplete(incId, event) {
+    if (event && event.stopPropagation) event.stopPropagation();
+    incidents = incidents.filter(i => i.id !== incId);
+    if (selectedIncId === incId) {
+      selectedIncId = incidents.length > 0 ? incidents[0].id : null;
     }
-  </script>
-</body>
+    updateKPIs();
+    renderQueue();
+    renderMapMarkers();
+    renderDetails();
 
-</html>
+    try {
+      const response = await fetch(`/api/incidents/${incId}/override/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'resolved' })
+      });
+      const data = await response.json();
+      if (data.success) {
+        fetchIncidents();
+      }
+    } catch (err) { console.error(err); }
+  }
+</script>
+{% endblock %}

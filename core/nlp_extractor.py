@@ -4,30 +4,47 @@ from core.nepal_geo_data import DISTRICTS, MUNICIPALITIES
 DISASTER_KEYWORDS = {
     'Flood': [
         "flood", "inundation", "river overflow", "swept away", "drowning", "heavy rainfall", "rising water", "submerged",
+        "rainfall", "rain", "torrential", "monsoon", "deluge", "waterlogging",
         "बाढी", "डुबान", "बगायो", "बगाएको", "सतह बढ्यो"
     ],
     'Landslide': [
         "landslide", "mudslide", "rockfall", "debris flow", "highway blocked", "buried under mud", "slope failure",
+        "road blocked", "debris", "cave-in",
         "पहिरो", "पहिरोले", "पहिरो खस्यो", "सडक अवरुद्ध", "पुरियो", "पुरिएको"
     ],
     'Earthquake': [
         "earthquake", "seismic", "tremor", "quake", "shaking", "rubble", "aftershock", "building collapse",
+        "epicenter", "magnitude",
         "भूकम्प", "कम्पन्न", "भूकम्पको धक्का", "घर भत्कियो", "भत्किएको"
     ],
     'Fire': [
-        "fire", "wildfire", "blaze", "smoke", "burning", "forest fire", "inferno",
+        "fire", "wildfire", "blaze", "smoke", "burning", "forest fire", "inferno", "torched", "set on fire", "arson",
         "आगलागी", "डढेलो", "आगो", "सल्कियो", "जल्यो"
+    ],
+    'Avalanche': [
+        "avalanche", "snowslide", "blizzard", "expedition", "mountaineer", "peak", "broad peak", "snowstorm", "high altitude",
+        "हिउँपहिरो", "हिउँ"
+    ],
+    'Storm': [
+        "storm", "lightning", "thunderstorm", "cloudburst", "hailstorm", "gale", "cyclone", "tempest", "windstorm",
+        "हावाहुरी", "चट्याङ"
+    ],
+    'Emergency': [
+        "curfew", "clash", "shooting", "drone attack", "protest", "explosion", "casualty", "casualties", "killed", "dead",
+        "trapped", "emergency", "crisis", "disaster", "fatal", "unrest", "strike", "riot"
     ]
 }
 
 LIFE_THREAT_KEYWORDS = [
     "trapped", "unconscious", "collapsed", "not breathing", "drowning", "buried", "under rubble", "casualties",
-    "casualty", "severe injuries", "critical condition", "missing", "swept away",
+    "casualty", "severe injuries", "critical condition", "missing", "swept away", "avalanche", "drone attack",
+    "killed", "dead", "fatalities", "victim", "shot", "death", "shooting", "clashes", "torched",
     "पुरिएको", "अचेत", "सम्पर्कविहीन", "सास फेर्न", "बगायो", "चेत नभएको", "पुरिएका", "च्यापिएको", "गुहार", "मर्न लाग्यो"
 ]
 
 URGENCY_KEYWORDS = [
     "emergency", "urgent", "immediate", "help", "save us", "rescue", "critical", "severe", "worst hit", "fatal",
+    "curfew", "protest", "clash", "warning", "alert",
     "अति आवश्यक", "उद्धार", "गुहार", "तुरन्त", "खतरा", "आकस्मिक"
 ]
 
@@ -79,7 +96,7 @@ def extract_from_text(text):
         severity = 5
 
     # Incremental adjustments
-    if any(kw in clean_text for kw in ["destroyed", "भत्कियो", "complete loss"]):
+    if any(kw in clean_text for kw in ["destroyed", "भत्कियो", "complete loss", "fatal", "killed"]):
         severity = min(10, severity + 1)
 
     # 5. Geocode Location matching

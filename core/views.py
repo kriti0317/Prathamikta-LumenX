@@ -22,9 +22,28 @@ LAST_SYNC_TIME = None
 
 def index(request):
     """
-    Renders the single-page EOC Dispatch Dashboard template.
+    Renders the EOC Dispatch Dashboard template.
     """
     return render(request, 'core/index.html')
+
+def all_incidents(request):
+    """
+    Renders the All Disaster Incidents table view.
+    """
+    return render(request, 'core/incidents.html')
+
+def full_map(request):
+    """
+    Renders the Full GIS Map view.
+    """
+    return render(request, 'core/full_map.html')
+
+def reports_view(request):
+    """
+    Renders the Raw Disaster Reports & Signals Database view.
+    """
+    return render(request, 'core/reports.html')
+
 
 def seed_default_dataset():
     """Seeds default incidents from prathamikta_default preset if database is empty."""
@@ -445,15 +464,107 @@ def get_specific_location_name(lat, lng, default_name=None):
         
     return default_name or "Nepal"
 
+def fetch_rss_news_items():
+    """
+    Fetches real-time RSS feeds from Onlinekhabar, Himalayan Times, and GDACS RSS,
+    runs NLP extraction, and returns structured disaster/emergency news items.
+    """
+    import xml.etree.ElementTree as ET
+    import re
+    from core.nlp_extractor import extract_from_text
+    
+    rss_urls = [
+        "https://english.onlinekhabar.com/feed",
+        "https://thehimalayantimes.com/feed",
+        "https://www.gdacs.org/xml/rss.xml"
+    ]
+    
+    results = []
+    seen_titles = set()
+    
+    for url in rss_urls:
+        try:
+            resp = requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}, timeout=6.0)
+            if resp.status_code == 200:
+                raw_content = getattr(resp, 'content', None)
+                if not raw_content and hasattr(resp, 'text') and resp.text:
+                    raw_content = resp.text.encode('utf-8')
+                if not raw_content:
+                    continue
+                root = ET.fromstring(raw_content)
+                items = root.findall('.//item')
+                for item in items:
+                    title_node = item.find('title')
+                    desc_node = item.find('description')
+                    guid_node = item.find('guid')
+                    
+                    title = title_node.text if title_node is not None and title_node.text else ''
+                    desc = desc_node.text if desc_node is not None and desc_node.text else ''
+                    
+                    title = re.sub(r'<[^>]+>', '', title).strip()
+                    desc = re.sub(r'<[^>]+>', '', desc).strip()
+                    
+                    if not title or title in seen_titles:
+                        continue
+                    seen_titles.add(title)
+                    
+                    full_text = f"{title}. {desc}"
+                    nlp_res = extract_from_text(full_text)
+                    
+                    # Check if disaster/emergency relevant
+                    is_relevant = (
+                        nlp_res['disaster_type'] != 'General' or 
+                        nlp_res['location'] is not None or 
+                        any(w in full_text.lower() for w in [
+                            'disaster', 'emergency', 'rescue', 'casualty', 'death', 'killed', 
+                            'avalanche', 'flood', 'landslide', 'fire', 'rain', 'storm', 'quake', 
+                            'blast', 'curfew', 'clash', 'strike', 'missing', 'trapped'
+                        ])
+                    )
+                    
+                    if is_relevant:
+                        loc = nlp_res['location']
+                        if loc:
+                            lat, lng = loc['lat'], loc['lng']
+                            district = loc['district']
+                            spec_loc = loc['name']
+                        else:
+                            lat, lng = 27.7, 85.32
+                            district = 'kathmandu'
+                            spec_loc = 'Nepal Emergency Site'
+                            
+                        guid_text = guid_node.text if guid_node is not None and guid_node.text else title
+                        guid_id = guid_text.split('?p=')[-1] if '?p=' in guid_text else str(abs(hash(title)))
+                        
+                        results.append({
+                            'sourceType': 'news',
+                            'title': f"RSS News: {title[:75]}",
+                            'locationName': spec_loc,
+                            'district': district,
+                            'severity': nlp_res['severity'],
+                            'lat': lat,
+                            'lng': lng,
+                            'description': f"{title} - {desc[:150]}",
+                            'disasterType': nlp_res['disaster_type'] if nlp_res['disaster_type'] != 'General' else 'Emergency',
+                            'isLifeThreat': nlp_res['is_life_threat'],
+                            'guid': guid_id,
+                            'rawText': full_text
+                        })
+        except Exception:
+            pass
+            
+    return results
+
+
 @csrf_exempt
 def fetch_gdacs_feeds(request):
     """
-    Fetches live GDACS (Global Disaster Alert & Coordination System) events,
-    filtering for alerts within/near Nepal boundaries. Falls back to mock data
-    if no active live alerts are in the region.
+    Fetches live GDACS events and real RSS news feeds.
+    Returns combined external alerts to front-end live feed sidebar.
     """
-    gdacs_alerts = []
+    alerts = []
     
+    # 1. Fetch GDACS alerts
     try:
         url = "https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH"
         response = requests.get(url, timeout=5)
@@ -474,7 +585,7 @@ def fetch_gdacs_feeds(request):
                         elif alertlevel == 'Red':
                             severity = 9
                             
-                        gdacs_alerts.append({
+                        alerts.append({
                             'sourceType': 'sensor',
                             'title': f"GDACS {alertlevel} Alert: {props.get('eventname', 'Disaster')}",
                             'locationName': get_specific_location_name(lat, lng, default_name=props.get('name', 'Nepal')),
@@ -483,13 +594,25 @@ def fetch_gdacs_feeds(request):
                             'lng': lng,
                             'description': props.get('description', f"GDACS alert level {alertlevel} near coordinates {lat}, {lng}.")
                         })
-    except Exception as e:
-        # Silent fallback to mock data on network/parsing issues
+    except Exception:
         pass
 
-    # If no live alerts in Nepal region, fall back to mock data to keep the UI interactive
-    if not gdacs_alerts:
-        gdacs_alerts = [
+    # 2. Fetch live RSS news items
+    rss_items = fetch_rss_news_items()
+    for item in rss_items[:8]:
+        alerts.append({
+            'sourceType': 'news',
+            'title': item['title'],
+            'locationName': item['locationName'],
+            'severity': item['severity'],
+            'lat': item['lat'],
+            'lng': item['lng'],
+            'description': item['description']
+        })
+
+    # 3. Fallback mock data if network returned no alerts
+    if not alerts:
+        alerts = [
             {
                 'sourceType': 'sensor',
                 'title': 'GDACS Alert: Bhotekoshi River Flash Flood Gauge Threshold Breached (Mock)',
@@ -510,7 +633,7 @@ def fetch_gdacs_feeds(request):
             }
         ]
         
-    return JsonResponse({'success': True, 'alerts': gdacs_alerts})
+    return JsonResponse({'success': True, 'alerts': alerts})
 
 
 @csrf_exempt
@@ -809,72 +932,51 @@ def run_feeds_sync():
     except Exception:
         pass
 
-    # 2. Sync Live News as Social Media Alerts (Onlinekhabar RSS)
+    # 2. Sync Live News as Social Media / News Alerts (Onlinekhabar, Himalayan Times, GDACS RSS)
     try:
-        import xml.etree.ElementTree as ET
-        from core.nlp_extractor import extract_from_text
-        
-        rss_url = "https://english.onlinekhabar.com/feed"
-        rss_response = requests.get(rss_url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=5.0)
-        if rss_response.status_code == 200:
-            root = ET.fromstring(rss_response.text.encode('utf-8'))
-            rss_items = root.findall('.//item')
-            for item in rss_items:
-                title = item.find('title').text or ''
-                desc = item.find('description').text or ''
-                full_text = f"{title}. {desc}"
+        rss_news = fetch_rss_news_items()
+        for news_item in rss_news:
+            raw_data = {
+                'sensorId': f"rss_{news_item['guid']}",
+                'sensorName': f"RSS News Feed ({news_item['locationName']})",
+                'text': news_item['description'],
+                'lat': news_item['lat'],
+                'lng': news_item['lng'],
+                'district': news_item['district'],
+                'locationName': news_item['locationName'],
+                'operatorSeverity': news_item['severity'],
+                'isLifeThreat': news_item['isLifeThreat'],
+                'needType': news_item['disasterType']
+            }
+            
+            norm_data = normalize_signal_data(raw_data, 'social_media', timezone.now().isoformat())
+            norm_data['location_name'] = news_item['locationName']
+            
+            if not Signal.objects.filter(description=norm_data['description']).exists():
+                signal = Signal.objects.create(
+                    source_type=norm_data['source_type'],
+                    timestamp=norm_data['timestamp'],
+                    description=norm_data['description'],
+                    lat=norm_data['lat'],
+                    lng=norm_data['lng'],
+                    district=norm_data['district'],
+                    location_name=norm_data['location_name'],
+                    severity=norm_data['severity'],
+                    is_life_threat=norm_data['is_life_threat'],
+                    raw_payload=norm_data['raw_payload']
+                )
+                ingested_count += 1
                 
-                # Run NLP extraction to find disaster keywords & Nepal locations
-                nlp_res = extract_from_text(full_text)
-                if nlp_res['disaster_type'] != 'General' and nlp_res['location']:
-                    loc = nlp_res['location']
-                    lat, lng = loc['lat'], loc['lng']
-                    district = loc['district']
-                    
-                    spec_loc = get_specific_location_name(lat, lng, default_name=loc['name'])
-                    
-                    guid_node = item.find('guid')
-                    guid_text = guid_node.text if guid_node is not None else title
-                    guid_id = guid_text.split('?p=')[-1] if '?p=' in guid_text else str(hash(title))
-                    
-                    raw_data = {
-                        'sensorId': f"rss_{guid_id}",
-                        'sensorName': 'RSS News Stream (Onlinekhabar)',
-                        'text': f"Onlinekhabar: {title} - {desc}",
-                        'lat': lat,
-                        'lng': lng,
-                        'district': district,
-                        'locationName': spec_loc,
-                    }
-                    
-                    norm_data = normalize_signal_data(raw_data, 'social_media', timezone.now().isoformat())
-                    norm_data['location_name'] = spec_loc
-                    
-                    if not Signal.objects.filter(description=norm_data['description']).exists():
-                        signal = Signal.objects.create(
-                            source_type=norm_data['source_type'],
-                            timestamp=norm_data['timestamp'],
-                            description=norm_data['description'],
-                            lat=norm_data['lat'],
-                            lng=norm_data['lng'],
-                            district=norm_data['district'],
-                            location_name=norm_data['location_name'],
-                            severity=norm_data['severity'],
-                            is_life_threat=norm_data['is_life_threat'],
-                            raw_payload=norm_data['raw_payload']
-                        )
-                        ingested_count += 1
-                        
-                        fused_incident = None
-                        active_incidents = Incident.objects.exclude(status__in=['resolved', 'dismissed'])
-                        for inc in active_incidents:
-                            if should_fuse(signal, inc, config):
-                                fused_incident = fuse_signal_to_incident(signal, inc)
-                                break
-                        if not fused_incident:
-                            create_new_incident_from_signal(signal)
-    except Exception:
-        pass
+                fused_incident = None
+                active_incidents = Incident.objects.exclude(status__in=['resolved', 'dismissed'])
+                for inc in active_incidents:
+                    if should_fuse(signal, inc, config):
+                        fused_incident = fuse_signal_to_incident(signal, inc)
+                        break
+                if not fused_incident:
+                    create_new_incident_from_signal(signal)
+    except Exception as e:
+        print(f"Error syncing RSS feed: {e}")
 
     # 3. Generate Simulated Real-time Call Log (with specific location/ward)
     try:

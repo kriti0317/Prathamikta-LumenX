@@ -1,0 +1,108 @@
+{% extends 'core/base.html' %}
+
+{% block title %}PRATHAMIKTA - Raw Disaster Reports Database{% endblock %}
+{% block nav_reports %}active{% endblock %}
+
+{% block content %}
+<div class="view active" id="view-reports">
+  <div class="fullpage">
+    <div class="fullpage-card">
+      <div class="fullpage-header">
+        <span>Raw Disaster Reports & Signals Database</span>
+        <input type="text" id="report-search" placeholder="Search reports..."
+          style="width: 240px; padding: 6px 12px; background: #131926; border: 1px solid var(--border); border-radius: 6px; color: white; font-size: 12px;"
+          onkeyup="filterReports()" />
+      </div>
+      <div class="table-container">
+        <table id="reports-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Source</th>
+              <th>Hazard</th>
+              <th>Location</th>
+              <th>Description</th>
+              <th>Severity</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="reports-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    fetchReports();
+    fetchIncidentsCount();
+  });
+
+  async function fetchIncidentsCount() {
+    try {
+      const response = await fetch('/api/incidents/');
+      const data = await response.json();
+      const rawIncidents = data.incidents || [];
+      incidents = rawIncidents.filter(i => i.status !== 'resolved' && i.status !== 'dismissed');
+      updateAlertCount(incidents.length);
+    } catch (err) { console.error(err); }
+  }
+
+  async function fetchReports() {
+    try {
+      const response = await fetch('/api/signals/all/');
+      const data = await response.json();
+      allRawSignals = data.signals || [];
+      renderReports(allRawSignals);
+    } catch (err) { console.error(err); }
+  }
+
+  function renderReports(signals) {
+    const tbody = document.getElementById('reports-tbody');
+    tbody.innerHTML = '';
+
+    if (signals.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+            No raw disaster reports or signals stored in the database.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    signals.forEach(sig => {
+      const sourceIcon = sig.sourceType === 'call_center' ? '📞 Call Center' :
+        sig.sourceType === 'sensor' ? '📡 GDACS' :
+          sig.sourceType === 'social_media' ? '📱 Social Media' : '📰 News RSS';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>#${sig.id}</td>
+        <td>${sourceIcon}</td>
+        <td><strong>${sig.disasterType}</strong></td>
+        <td>${cleanLocation(sig.locationName, sig.district)}</td>
+        <td style="max-width: 380px;">"${sig.description}"</td>
+        <td><span style="color: ${sig.severity >= 8 ? '#ef4444' : sig.severity >= 6 ? '#f97316' : '#10b981'}; font-weight: 700;">${sig.severity}/10</span></td>
+        <td>${new Date(sig.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function filterReports() {
+    const query = document.getElementById('report-search').value.toLowerCase();
+    const filtered = allRawSignals.filter(s =>
+      s.description.toLowerCase().includes(query) ||
+      (s.locationName && s.locationName.toLowerCase().includes(query)) ||
+      (s.disasterType && s.disasterType.toLowerCase().includes(query)) ||
+      (s.district && s.district.toLowerCase().includes(query))
+    );
+    renderReports(filtered);
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'core/base.html' %}
+
+{% block title %}PRATHAMIKTA - Full GIS Map{% endblock %}
+{% block nav_fullmap %}active{% endblock %}
+
+{% block content %}
+<div class="view active" id="view-fullmap">
+  <div style="padding: 12px; height: 100%;">
+    <div class="fullpage-card" style="border-radius: 8px; position: relative;">
+      <div id="fullmap" style="width: 100%; height: 100%; min-height: 500px;"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let fullmap = null;
+  let fullMapNearbyAidLayer = null;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initFullMap();
+    fetchIncidents();
+  });
+
+  function initFullMap() {
+    fullmap = L.map('fullmap', { center: [28.1, 84.4], zoom: 7, zoomControl: true, attributionControl: false });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(fullmap);
+    fullMapNearbyAidLayer = L.layerGroup().addTo(fullmap);
+  }
+
+  async function fetchIncidents() {
+    try {
+      const response = await fetch('/api/incidents/');
+      const data = await response.json();
+      const rawIncidents = data.incidents || [];
+      incidents = rawIncidents.filter(i => i.status !== 'resolved' && i.status !== 'dismissed');
+
+      updateAlertCount(incidents.length);
+      renderFullMapMarkers();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function renderFullMapMarkers() {
+    if (!fullmap) return;
+
+    fullmap.eachLayer(layer => {
+      if (layer instanceof L.CircleMarker) layer.remove();
+    });
+
+    incidents.forEach(inc => {
+      const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
+      let color = '#10b981';
+      if (score >= 85) color = '#ef4444';
+      else if (score >= 65) color = '#f97316';
+      else if (score >= 45) color = '#eab308';
+
+      const locName = cleanLocation(inc.locationName, inc.districtId);
+
+      const marker = L.circleMarker([inc.lat, inc.lng], {
+        radius: 10,
+        fillColor: color,
+        color: '#fff',
+        weight: 2,
+        fillOpacity: 0.9
+      }).addTo(fullmap);
+
+      marker.bindPopup(`
+        <div style="font-size: 12px; line-height: 1.5;">
+          <strong>${inc.disasterType}</strong><br/>
+          📍 ${locName}<br/>
+          Priority Score: <strong>${score}/100</strong><br/>
+          Status: ${inc.status === 'rescuers_arrived' ? '🚑 On-Site' : '⏳ Dispatched'}
+        </div>
+      `);
+    });
+  }
+</script>
+{% endblock %}
