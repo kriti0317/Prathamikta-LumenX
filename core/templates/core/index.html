@@ -424,6 +424,19 @@
     .detail-label { color: var(--text-secondary); }
     .detail-value { font-weight: 600; color: var(--text-primary); }
 
+    .detail-link {
+      color: #60a5fa;
+      text-decoration: none;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 170px;
+      display: inline-block;
+    }
+
+    .detail-link:hover { color: #93c5fd; text-decoration: underline; }
+
     .detail-empty {
       padding: 60px 16px;
       text-align: center;
@@ -753,52 +766,6 @@
           </div>
         </div>
 
-        <!-- REAL-TIME SOURCE FEEDS -->
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 12px; border-top: 1px solid var(--border);">
-          <div class="panel">
-            <div class="panel-header">📞 Disaster Calls</div>
-            <div style="padding: 12px; display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <div style="font-size: 20px; font-weight: 800; color: white;">128</div>
-                <div style="font-size: 10px; color: var(--text-secondary);">reports</div>
-              </div>
-              <div style="color: #10b981; font-size: 12px; font-weight: 700;">▲ 15%</div>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-header">📡 GDACS Sensors</div>
-            <div style="padding: 12px; display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <div style="font-size: 20px; font-weight: 800; color: white;">73</div>
-                <div style="font-size: 10px; color: var(--text-secondary);">reports</div>
-              </div>
-              <div style="color: #10b981; font-size: 12px; font-weight: 700;">▲ 8%</div>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-header">📱 Social Media</div>
-            <div style="padding: 12px; display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <div style="font-size: 20px; font-weight: 800; color: white;">256</div>
-                <div style="font-size: 10px; color: var(--text-secondary);">reports</div>
-              </div>
-              <div style="color: #10b981; font-size: 12px; font-weight: 700;">▲ 23%</div>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-header">📰 News RSS Feeds</div>
-            <div style="padding: 12px; display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <div style="font-size: 20px; font-weight: 800; color: white;">42</div>
-                <div style="font-size: 10px; color: var(--text-secondary);">reports</div>
-              </div>
-              <div style="color: #10b981; font-size: 12px; font-weight: 700;">▲ 12%</div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- ALL INCIDENTS QUEUE VIEW -->
@@ -1096,6 +1063,28 @@
 
       const score = inc.manualPriority !== null ? inc.manualPriority : Math.round(inc.triageScore);
       const isArrived = inc.status === 'rescuers_arrived';
+      const sourceRows = (inc.reports || []).map((report, index) => {
+        const sourceLabel = {
+          call_center: '📞 Call Center',
+          sensor: '📡 GDACS Sensor',
+          social_media: '📱 Social Media',
+          news: '📰 News RSS'
+        }[report.sourceType] || '📡 Source';
+
+        const sourceMeta = report.meta || {};
+        const sourceUrl = sourceMeta.url || sourceMeta.link || sourceMeta.sourceUrl || '';
+        const sourceName = sourceMeta.platform || sourceMeta.sensorName || sourceMeta.callerName || sourceMeta.username || `Entry ${index + 1}`;
+        const sourceText = sourceUrl
+          ? `<a class="detail-link" href="${sourceUrl}" target="_blank" rel="noreferrer">${sourceName}</a>`
+          : `<span class="detail-value">${sourceName}</span>`;
+
+        return `
+          <div class="detail-row">
+            <span class="detail-label">${sourceLabel}</span>
+            <span class="detail-value">${sourceText}</span>
+          </div>
+        `;
+      }).join('');
 
       panel.innerHTML = `
         <div class="detail-title">${inc.disasterType}</div>
@@ -1134,22 +1123,12 @@
         </div>
 
         <div class="detail-section">Data Sources</div>
-        <div class="detail-row">
-          <span class="detail-label">📞 Call Center</span>
-          <span class="detail-value" style="color: #10b981;">🟢 Online</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">📡 GDACS Sensors</span>
-          <span class="detail-value" style="color: #10b981;">🟢 Online</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">📱 Social Media</span>
-          <span class="detail-value" style="color: #10b981;">🟢 Online</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">📰 News RSS Feeds</span>
-          <span class="detail-value" style="color: #10b981;">🟢 Online</span>
-        </div>
+        ${sourceRows || `
+          <div class="detail-row">
+            <span class="detail-label">Source</span>
+            <span class="detail-value">No source references available</span>
+          </div>
+        `}
 
         <div class="action-buttons">
           ${!isArrived ? `
