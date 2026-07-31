@@ -7,6 +7,11 @@
 <div class="view active" id="view-fullmap">
   <div style="padding: 12px; height: 100%;">
     <div class="fullpage-card" style="border-radius: 8px; position: relative;">
+      <div style="position: absolute; top: 12px; right: 12px; z-index: 1000; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 4px 8px; display: flex; gap: 8px; font-size: 11px;">
+        <label style="cursor: pointer; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 3px 8px; border-radius: 4px; color: #fca5a5; display: flex; align-items: center; gap: 4px;">
+          <input type="checkbox" id="fm-toggle-vuln-heatmap" onchange="toggleFullMapVulnerabilityHeatmap(this.checked)"> 🔥 Vulnerability Heatmap
+        </label>
+      </div>
       <div id="fullmap" style="width: 100%; height: 100%; min-height: 500px;"></div>
     </div>
   </div>
@@ -17,10 +22,13 @@
 <script>
   let fullmap = null;
   let fullMapNearbyAidLayer = null;
+  let fmVulnLayer = null;
+  let fmLayerData = null;
 
   document.addEventListener('DOMContentLoaded', () => {
     initFullMap();
     fetchIncidents();
+    loadFullMapGISData();
   });
 
   function initFullMap() {
@@ -29,12 +37,50 @@
     fullMapNearbyAidLayer = L.layerGroup().addTo(fullmap);
   }
 
+  async function loadFullMapGISData() {
+    try {
+      const response = await fetch('/api/map/vulnerability-layers/');
+      const data = await response.json();
+      if (data.success) fmLayerData = data;
+    } catch (err) { console.error(err); }
+  }
+
+  function toggleFullMapVulnerabilityHeatmap(enabled) {
+    if (!fullmap) return;
+    if (!fmVulnLayer) fmVulnLayer = L.layerGroup().addTo(fullmap);
+    fmVulnLayer.clearLayers();
+    if (!enabled || !fmLayerData) return;
+
+    fmLayerData.districtHeatmap.forEach(dist => {
+      const circle = L.circle([dist.lat, dist.lng], {
+        radius: dist.radius,
+        fillColor: dist.color,
+        color: dist.color,
+        weight: 1,
+        fillOpacity: 0.35
+      }).addTo(fmVulnLayer);
+
+      circle.bindPopup(`
+        <div style="font-size: 11px; line-height: 1.4;">
+          <strong style="color: ${dist.color}; font-size: 12px;">🔥 ${dist.name} District (${dist.nameNep})</strong><br/>
+          <strong>Vulnerability Index:</strong> ${dist.vulnerability}/10<br/>
+          <strong>Primary Hazards:</strong> ${dist.riskType}<br/>
+          <strong>Population at Risk:</strong> ${dist.population.toLocaleString()}<br/>
+          <strong>Province:</strong> ${dist.province}
+        </div>
+      `);
+    });
+  }
+
+
+
   async function fetchIncidents() {
     try {
       const response = await fetch('/api/incidents/');
       const data = await response.json();
       const rawIncidents = data.incidents || [];
-      incidents = rawIncidents.filter(i => i.status !== 'resolved' && i.status !== 'dismissed');
+      incidents = rawIncidents.filter(i => !['resolved', 'dismissed', 'completed', 'complete', 'closed'].includes((i.status || '').toLowerCase()));
+
 
       updateAlertCount(incidents.length);
       renderFullMapMarkers();

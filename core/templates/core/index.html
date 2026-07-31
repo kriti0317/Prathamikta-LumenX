@@ -46,10 +46,17 @@
     </div>
 
     <!-- MAP -->
-    <div class="panel">
-      <div class="panel-header">Live Locations</div>
+    <div class="panel" style="position: relative;">
+      <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>Live Locations</span>
+        <label style="cursor: pointer; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 1px 6px; border-radius: 4px; color: #fca5a5; font-size: 10px; display: flex; align-items: center; gap: 4px;">
+          <input type="checkbox" id="toggle-vuln-heatmap" onchange="toggleVulnerabilityHeatmap(this.checked)"> 🔥 Risk Heatmap
+        </label>
+      </div>
       <div id="map" style="flex: 1;"></div>
     </div>
+
+
 
     <!-- DETAILS -->
     <div class="panel">
@@ -78,14 +85,70 @@
     map = L.map('map', { center: [28.1, 84.4], zoom: 8, zoomControl: false, attributionControl: false });
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(map);
     nearbyAidLayer = L.layerGroup().addTo(map);
+    loadVulnerabilityLayerData();
   }
+
+  let vulnHeatmapLayerGroup = null;
+  let riverCorridorsLayerGroup = null;
+  let landslideZonesLayerGroup = null;
+  let layerData = null;
+
+  async function loadVulnerabilityLayerData() {
+    try {
+      const response = await fetch('/api/map/vulnerability-layers/');
+      const data = await response.json();
+      if (data.success) {
+        layerData = data;
+      }
+    } catch (err) {
+      console.error("Error loading vulnerability GIS layer data:", err);
+    }
+  }
+
+  function toggleVulnerabilityHeatmap(enabled) {
+    if (!map) return;
+    if (!vulnHeatmapLayerGroup) vulnHeatmapLayerGroup = L.layerGroup().addTo(map);
+    vulnHeatmapLayerGroup.clearLayers();
+
+    if (!enabled || !layerData) return;
+
+    layerData.districtHeatmap.forEach(dist => {
+      const circle = L.circle([dist.lat, dist.lng], {
+        radius: dist.radius,
+        fillColor: dist.color,
+        color: dist.color,
+        weight: 1,
+        fillOpacity: 0.35
+      }).addTo(vulnHeatmapLayerGroup);
+
+      circle.bindPopup(`
+        <div style="font-size: 11px; line-height: 1.4;">
+          <strong style="color: ${dist.color}; font-size: 12px;">🔥 ${dist.name} District (${dist.nameNep})</strong><br/>
+          <strong>Vulnerability Index:</strong> ${dist.vulnerability}/10<br/>
+          <strong>Primary Hazards:</strong> ${dist.riskType}<br/>
+          <strong>Population at Risk:</strong> ${dist.population.toLocaleString()}<br/>
+          <strong>Province:</strong> ${dist.province}
+        </div>
+      `);
+    });
+  }
+
+  function toggleRiverCorridors(enabled) {
+    if (!map) return;
+    if (!riverCorridorsLayerGroup) riverCorridorsLayerGroup = L.layerGroup().addTo(map);
+    riverCorridorsLayerGroup.clearLayers();
+
+  }
+
+
 
   async function fetchIncidents() {
     try {
       const response = await fetch('/api/incidents/');
       const data = await response.json();
       const rawIncidents = data.incidents || [];
-      incidents = rawIncidents.filter(i => i.status !== 'resolved' && i.status !== 'dismissed');
+      incidents = rawIncidents.filter(i => !['resolved', 'dismissed', 'completed', 'complete', 'closed'].includes((i.status || '').toLowerCase()));
+
 
       if (incidents.length > 0 && (!selectedIncId || !incidents.some(i => i.id === selectedIncId))) {
         selectedIncId = incidents[0].id;

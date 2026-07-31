@@ -45,7 +45,8 @@
       const response = await fetch('/api/incidents/');
       const data = await response.json();
       const rawIncidents = data.incidents || [];
-      incidents = rawIncidents.filter(i => i.status !== 'resolved' && i.status !== 'dismissed');
+      incidents = rawIncidents.filter(i => !['resolved', 'dismissed', 'completed', 'complete', 'closed'].includes((i.status || '').toLowerCase()));
+
 
       updateAlertCount(incidents.length);
       renderQueueTable();

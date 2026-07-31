@@ -104,7 +104,8 @@ def get_incidents(request):
     if Incident.objects.count() == 0:
         seed_default_dataset()
 
-    active_incidents = Incident.objects.exclude(status__in=['resolved', 'dismissed'])
+    active_incidents = Incident.objects.exclude(status__in=['resolved', 'dismissed', 'completed', 'complete', 'closed'])
+
     config = SystemConfig.get_config()
     current_time = timezone.now()
 
@@ -353,17 +354,22 @@ def incident_override(request, incident_id):
 
         if 'status' in data:
             old_status = incident.status
-            new_status = data['status']
-            incident.status = new_status
+            requested_status = str(data['status']).strip().lower()
+            if requested_status in ['resolved', 'completed', 'complete', 'closed', 'dismissed']:
+                incident.status = 'resolved'
+            else:
+                incident.status = requested_status
             
-            if new_status == 'rescuers_arrived':
+            if incident.status == 'rescuers_arrived':
                 msg = f"🚑 Rescuers arrived at disaster site ({incident.location_name}). Rescuer arrival manually logged by dispatch."
-            elif new_status == 'resolved':
+            elif incident.status == 'resolved':
                 msg = f"✅ Rescuers completed work at disaster site ({incident.location_name}). Incident resolved and removed from active queue."
             else:
-                msg = f"Dispatcher updated status from {old_status} to {new_status}."
+                msg = f"Dispatcher updated status from {old_status} to {incident.status}."
                 
+            incident.save()
             AuditLog.objects.create(incident=incident, message=msg)
+
 
         if 'manualPriority' in data:
             priority_val = data['manualPriority']
@@ -1102,5 +1108,39 @@ def sync_gdacs_live_feed(request):
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def vulnerability_layers(request):
+    """
+    Returns structured District Vulnerability Heatmap GIS layer for Leaflet map.
+    """
+    from core.nepal_geo_data import DISTRICTS, SENSOR_STATIONS
+
+    district_heatmap = []
+    for dist in DISTRICTS:
+        vuln = dist.get('vulnerability', 5)
+        color = '#ef4444' if vuln >= 8 else ('#f97316' if vuln >= 6 else '#eab308')
+        district_heatmap.append({
+            'id': dist['id'],
+            'name': dist['name'],
+            'nameNep': dist.get('nameNep', dist['name']),
+            'lat': dist['lat'],
+            'lng': dist['lng'],
+            'vulnerability': vuln,
+            'riskType': dist.get('riskType', 'General'),
+            'population': dist.get('population', 0),
+            'province': dist.get('province', 1),
+            'color': color,
+            'radius': vuln * 2200
+        })
+
+    return JsonResponse({
+        'success': True,
+        'districtHeatmap': district_heatmap,
+        'sensorStations': SENSOR_STATIONS
+    })
+
+
 
 
