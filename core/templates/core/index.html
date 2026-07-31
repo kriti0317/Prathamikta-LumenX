@@ -645,6 +645,125 @@
 
     input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
 
+    /* CHATBOT */
+    .chatbot-toggle {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      background: linear-gradient(135deg, #ef4444, #991b1b);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+      z-index: 2500;
+    }
+
+    .chatbot-panel {
+      position: fixed;
+      right: 18px;
+      bottom: 86px;
+      width: 340px;
+      height: 440px;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 2500;
+    }
+
+    .chatbot-panel.open { display: flex; }
+
+    .chatbot-header {
+      padding: 12px 14px;
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(30, 41, 59, 0.85));
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .chatbot-close {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .chatbot-body {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: rgba(10, 15, 25, 0.75);
+    }
+
+    .chat-msg {
+      max-width: 85%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.4;
+      white-space: pre-line;
+    }
+
+    .chat-msg.bot {
+      background: #131926;
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      align-self: flex-start;
+    }
+
+    .chat-msg.user {
+      background: rgba(239, 68, 68, 0.18);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: white;
+      align-self: flex-end;
+    }
+
+    .chatbot-input-row {
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      border-top: 1px solid var(--border);
+      background: #0b1220;
+    }
+
+    .chatbot-input {
+      flex: 1;
+      background: #131926;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: white;
+      padding: 8px 10px;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .chatbot-send {
+      background: var(--color-critical);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      padding: 8px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
     /* KPI CARDS */
     .kpi-row {
       display: grid;
@@ -840,6 +959,25 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- CHATBOT -->
+  <button class="chatbot-toggle" id="chatbot-toggle" onclick="toggleChatbot()" aria-label="Open chatbot">
+    <i data-lucide="message-circle" style="width: 22px; height: 22px;"></i>
+  </button>
+
+  <div class="chatbot-panel" id="chatbot-panel">
+    <div class="chatbot-header">
+      <span>PRATHAMIKTA AI Assistant</span>
+      <button class="chatbot-close" onclick="toggleChatbot()">×</button>
+    </div>
+    <div class="chatbot-body" id="chatbot-body">
+      <div class="chat-msg bot">👋 Hello! Ask me for disaster statistics, the highest priority site, or the priority formula.</div>
+    </div>
+    <div class="chatbot-input-row">
+      <input class="chatbot-input" id="chatbot-input" type="text" placeholder="Ask about incidents..." />
+      <button class="chatbot-send" onclick="sendChatbotMessage()">Send</button>
     </div>
   </div>
 
@@ -1251,6 +1389,49 @@
         });
       }, 120);
     }
+
+    function toggleChatbot() {
+      const panel = document.getElementById('chatbot-panel');
+      panel.classList.toggle('open');
+    }
+
+    function appendChatMessage(text, sender = 'bot') {
+      const body = document.getElementById('chatbot-body');
+      const msg = document.createElement('div');
+      msg.className = `chat-msg ${sender}`;
+      msg.textContent = text;
+      body.appendChild(msg);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    async function sendChatbotMessage() {
+      const input = document.getElementById('chatbot-input');
+      const message = input.value.trim();
+      if (!message) return;
+
+      appendChatMessage(message, 'user');
+      input.value = '';
+
+      try {
+        const response = await fetch('/api/chatbot/query/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+        const data = await response.json();
+        const reply = data.reply || 'I could not generate a response right now.';
+        appendChatMessage(reply, 'bot');
+      } catch (err) {
+        appendChatMessage('Sorry, the chatbot service is unavailable right now.', 'bot');
+        console.error(err);
+      }
+    }
+
+    document.getElementById('chatbot-input').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        sendChatbotMessage();
+      }
+    });
 
     function openIngestModal() {
       document.getElementById('ingest-modal').style.display = 'flex';
