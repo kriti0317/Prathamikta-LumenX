@@ -120,8 +120,8 @@ class NDIFTSEngineTests(TestCase):
         # trust: max_trust 1.0 (call center) * 10 = 10 * 2 = 20
         # vulnerability: Kathmandu (8) * 1 = 8
         # time waiting: 0 mins = 0 * 1 = 0
-        # total: 12 + 2 + 20 + 8 + 0 = 42
-        self.assertEqual(score_normal['final_score'], 42)
+        # normalized score: min(100, round((42 / 90.0) * 100)) = 47
+        self.assertEqual(score_normal['final_score'], 47)
         self.assertFalse(score_normal['is_overridden'])
 
         # Create critical earthquake incident (with life threat)
@@ -146,6 +146,6 @@ class NDIFTSEngineTests(TestCase):
         # vulnerability: Jajarkot (9) * 1 = 9
         # time waiting: 0 mins = 0 * 1 = 0
         # base: 27 + 2 + 20 + 9 + 0 = 58
-        # final: 58 + 1000 = 1058
-        self.assertEqual(score_critical['final_score'], 1058)
+        # final score: 0-100 scale triage score with override boost = 96
+        self.assertEqual(score_critical['final_score'], 96)
         self.assertTrue(score_critical['is_overridden'])

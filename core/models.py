@@ -36,8 +36,8 @@ class Incident(models.Model):
     ]
 
     disaster_type = models.CharField(max_length=50, default='General')
-    location_name = models.CharField(max_length=255, default='Unknown Location')
-    district_id = models.CharField(max_length=100, default='unknown')
+    location_name = models.CharField(max_length=255, default='Reported Emergency Site')
+    district_id = models.CharField(max_length=100, default='central')
     lat = models.FloatField(default=27.7)  # Central Nepal default
     lng = models.FloatField(default=85.3)
     

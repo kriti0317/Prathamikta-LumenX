@@ -38,8 +38,8 @@ def normalize_signal_data(raw_data, source_type, timestamp_str=None):
         timestamp = timezone.now()
 
     disaster_type = 'General'
-    location_name = 'Unknown Location'
-    district = 'unknown'
+    location_name = 'Reported Emergency Area'
+    district = 'general'
     lat = None
     lng = None
     severity = 5
@@ -55,8 +55,8 @@ def normalize_signal_data(raw_data, source_type, timestamp_str=None):
         
         lat = float(raw_data.get('lat')) if raw_data.get('lat') else None
         lng = float(raw_data.get('lng')) if raw_data.get('lng') else None
-        district = raw_data.get('district', 'unknown')
-        location_name = raw_data.get('locationName', 'Reported Location')
+        district = raw_data.get('district') or 'general'
+        location_name = raw_data.get('locationName') or 'Reported Emergency Area'
 
     elif source_type == 'sensor':
         disaster_type = raw_data.get('hazardType', 'Sensor Threshold')

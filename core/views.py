@@ -92,7 +92,7 @@ def get_incidents(request):
         serialized.append({
             'id': f"inc_{inc.id}",
             'disasterType': inc.disaster_type,
-            'locationName': inc.location_name,
+            'locationName': inc.location_name if inc.location_name and 'unknown' not in inc.location_name.lower() else (f"{inc.district_id.title()} Sector" if inc.district_id and 'unknown' not in inc.district_id.lower() else 'Nepal Emergency Site'),
             'districtId': inc.district_id,
             'lat': inc.lat,
             'lng': inc.lng,
@@ -487,7 +487,7 @@ def get_all_signals(request):
             'disasterType': sig.disaster_type,
             'timestamp': sig.timestamp.isoformat(),
             'description': sig.description,
-            'locationName': sig.location_name or sig.district or 'Unknown Location',
+            'locationName': (sig.location_name if sig.location_name and 'unknown' not in sig.location_name.lower() else None) or (sig.district if sig.district and 'unknown' not in sig.district.lower() else None) or 'Nepal Emergency Site',
             'district': sig.district,
             'lat': sig.lat,
             'lng': sig.lng,
