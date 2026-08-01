@@ -332,23 +332,23 @@
     <div class="kpi-grid">
       <div class="analytics-kpi kpi-blue">
         <div class="kpi-header" id="kpi-total-events-label">Total Historical Events</div>
-        <div class="kpi-val" id="kpi-total-events">1,510</div>
-        <div class="kpi-sub">Verified EOC Ground Records</div>
+        <div class="kpi-val" id="kpi-total-events">--</div>
+        <div class="kpi-sub" id="kpi-total-events-sub">Verified EOC Ground Records</div>
       </div>
       <div class="analytics-kpi kpi-orange">
         <div class="kpi-header">Highest Risk District</div>
-        <div class="kpi-val" id="kpi-high-risk-district" style="font-size: 16px;">Sindhupalchok</div>
-        <div class="kpi-sub">Vulnerability Index: 8.8 / 10</div>
+        <div class="kpi-val" id="kpi-high-risk-district" style="font-size: 16px;">--</div>
+        <div class="kpi-sub" id="kpi-high-risk-district-sub">Vulnerability Index: -- / 10</div>
       </div>
       <div class="analytics-kpi kpi-red">
         <div class="kpi-header">Dominant Hazard</div>
-        <div class="kpi-val" id="kpi-dominant-hazard" style="font-size: 16px;">Flood Inundation</div>
-        <div class="kpi-sub">42.5% of Total Disasters</div>
+        <div class="kpi-val" id="kpi-dominant-hazard" style="font-size: 16px;">--</div>
+        <div class="kpi-sub" id="kpi-dominant-hazard-sub">--% of Total Disasters</div>
       </div>
       <div class="analytics-kpi kpi-purple">
         <div class="kpi-header">Avg Triage Priority</div>
-        <div class="kpi-val" id="kpi-avg-priority">74.2 / 100</div>
-        <div class="kpi-sub">High Priority Baseline</div>
+        <div class="kpi-val" id="kpi-avg-priority">--</div>
+        <div class="kpi-sub" id="kpi-avg-priority-sub">Dynamic Baseline</div>
       </div>
     </div>
 
@@ -535,11 +535,34 @@
 
       if (window.lucide) lucide.createIcons();
 
-      // Update KPI
-      document.getElementById('kpi-total-events').textContent = data.kpiSummary.totalHistoricalEvents.toLocaleString();
-      document.getElementById('kpi-high-risk-district').textContent = data.kpiSummary.highestRiskDistrict;
-      document.getElementById('kpi-dominant-hazard').textContent = data.kpiSummary.dominantHazard;
-      document.getElementById('kpi-avg-priority').textContent = data.kpiSummary.avgPriorityScore;
+      // Update KPI Cards & Subtitles Dynamically
+      if (document.getElementById('kpi-total-events')) {
+        document.getElementById('kpi-total-events').textContent = (data.kpiSummary.totalHistoricalEvents || 0).toLocaleString();
+      }
+      if (document.getElementById('kpi-total-events-sub') && data.kpiSummary.totalHistoricalEventsSub) {
+        document.getElementById('kpi-total-events-sub').textContent = data.kpiSummary.totalHistoricalEventsSub;
+      }
+
+      if (document.getElementById('kpi-high-risk-district')) {
+        document.getElementById('kpi-high-risk-district').textContent = data.kpiSummary.highestRiskDistrict || '--';
+      }
+      if (document.getElementById('kpi-high-risk-district-sub') && data.kpiSummary.highestRiskDistrictSub) {
+        document.getElementById('kpi-high-risk-district-sub').textContent = data.kpiSummary.highestRiskDistrictSub;
+      }
+
+      if (document.getElementById('kpi-dominant-hazard')) {
+        document.getElementById('kpi-dominant-hazard').textContent = data.kpiSummary.dominantHazard || '--';
+      }
+      if (document.getElementById('kpi-dominant-hazard-sub') && data.kpiSummary.dominantHazardSub) {
+        document.getElementById('kpi-dominant-hazard-sub').textContent = data.kpiSummary.dominantHazardSub;
+      }
+
+      if (document.getElementById('kpi-avg-priority')) {
+        document.getElementById('kpi-avg-priority').textContent = data.kpiSummary.avgPriorityScore || '--';
+      }
+      if (document.getElementById('kpi-avg-priority-sub') && data.kpiSummary.avgPrioritySub) {
+        document.getElementById('kpi-avg-priority-sub').textContent = data.kpiSummary.avgPrioritySub;
+      }
 
       // Render Charts
       renderTimelineChart(data.timeline);
@@ -642,7 +665,8 @@
     chartSources = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ['📞 1155 EOC Calls', '📡 GDACS Sensors', '📰 RSS News Feeds'],
+        labels: ['📞 1155 EOC Hotline', '📡 USGS & GDACS Sensors', '📰 RSS & News Feeds'],
+
         datasets: [{
           label: 'Verified Signals Count',
           data: [stats.call_center || 0, stats.sensor || 0, stats.news || 0],

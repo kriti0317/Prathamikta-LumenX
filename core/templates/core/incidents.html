@@ -19,10 +19,8 @@
             <tr>
               <th>#</th>
               <th>Hazard & Location</th>
-              <th>Formula Score</th>
-              <th>AI Score</th>
+              <th>Priority Score</th>
               <th>Triage Level</th>
-              <th>AI Recommendation Rationale</th>
               <th>Status</th>
               <th>Action</th>
             </tr>
@@ -63,7 +61,7 @@
     if (incidents.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
+          <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
             ✅ No active disaster incidents currently registered.
           </td>
         </tr>
@@ -84,12 +82,8 @@
       tr.innerHTML = `
         <td>${idx + 1}</td>
         <td><strong>${inc.disasterType}</strong> - ${locDisplay}</td>
-        <td><span style="color: #94a3b8; font-weight: 600;">${inc.formulaScore || Math.round(score * 0.95)}</span>/100</td>
-        <td><strong style="color: #c084fc; font-weight: 700;">${inc.aiSuggestedScore || score}</strong>/100</td>
+        <td><strong style="color: #38bdf8; font-weight: 700;">${score}</strong>/100</td>
         <td><span style="background: rgba(255,255,255,0.08); padding: 3px 8px; border-radius: 4px; font-weight: 700; color: ${levelColor}">${inc.triageLevel}</span></td>
-        <td style="max-width: 300px; font-size: 11px; color: #e9d5ff; line-height: 1.3;">
-          <span style="color: #c084fc; font-weight: 600;">[${inc.aiRiskLevel || 'High'}]</span> ${inc.aiRecommendation || 'AI score calculated.'}
-        </td>
         <td>${inc.status === 'rescuers_arrived' ? '🚑 On-Site' : '⏳ Active'}</td>
         <td>
           ${inc.status !== 'rescuers_arrived' ? `
