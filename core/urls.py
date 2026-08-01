@@ -22,5 +22,6 @@ urlpatterns = [
     path('api/feeds/gdacs/sync/', views.sync_gdacs_live_feed, name='sync_gdacs_live_feed'),
     path('api/map/vulnerability-layers/', views.vulnerability_layers, name='vulnerability_layers'),
     path('api/analytics/history/', views.analytics_data_api, name='analytics_data_api'),
+    path('api/incidents/<str:incident_id>/dispatch-email/', views.dispatch_rescuer_email, name='dispatch_rescuer_email'),
 ]
 

@@ -114,20 +114,20 @@ def calculate_priority(incident, config=None, current_time=None):
 
 
 GROQ_BASE_URL = os.environ.get("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
-GROQ_MODEL_NAME = os.environ.get("GROQ_MODEL_NAME", "openai/gpt-oss-20b")
+GROQ_MODEL_NAME = os.environ.get("GROQ_MODEL_NAME", "llama-3.3-70b-versatile")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
 def calculate_ai_priority_suggestion(incident, signals, formula_score):
     """
     Method 2: AI Model Priority Scoring & Triage Recommendation.
-    Connects to Groq OpenAI-compatible API (base_url: https://api.groq.com/openai/v1, model: openai/gpt-oss-20b)
+    Connects to Groq OpenAI-compatible API (base_url: https://api.groq.com/openai/v1, model: llama-3.3-70b-versatile)
     to perform deep NLP analysis of disaster reports, casualty risk, and life-threat severity.
     """
     all_texts = " ".join([s.description for s in signals if s.description]).strip()
     if not all_texts:
         all_texts = f"Emergency report for {incident.disaster_type} at {incident.location_name}."
 
-    # 1. Attempt Live Call to Groq API (openai/gpt-oss-20b) if GROQ_API_KEY is configured
+    # 1. Attempt Live Call to Groq API if GROQ_API_KEY is configured
     if GROQ_API_KEY:
         try:
             endpoint = f"{GROQ_BASE_URL.rstrip('/')}/chat/completions"

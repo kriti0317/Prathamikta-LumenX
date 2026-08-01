@@ -1452,5 +1452,41 @@ def analytics_data_api(request):
     })
 
 
+@csrf_exempt
+def dispatch_rescuer_email(request, incident_id):
+    """
+    Sends an SMTP Email Alert to rescuers for a given incident.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+
+    try:
+        clean_id = str(incident_id).replace('inc_', '')
+        incident = Incident.objects.get(id=clean_id)
+    except (Incident.DoesNotExist, ValueError):
+        return JsonResponse({'success': False, 'error': 'Incident not found'}, status=404)
+
+    try:
+        body_data = json.loads(request.body.decode('utf-8')) if request.body else {}
+    except Exception:
+        body_data = {}
+
+    recipient_email = body_data.get('email')
+    notes = body_data.get('notes')
+
+    from core.smtp_service import send_rescuer_email_alert
+    result = send_rescuer_email_alert(incident, custom_email=recipient_email, custom_notes=notes)
+
+    return JsonResponse({
+        'success': result.get('success', False),
+        'incident_id': f"inc_{incident.id}",
+        'recipient': result.get('recipient'),
+        'status': result.get('status'),
+        'error': result.get('error'),
+        'message': f"SMTP Email notification dispatched to {result.get('recipient')}" if result.get('success') else result.get('error')
+    })
+
+
+
 
 
