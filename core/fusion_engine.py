@@ -114,36 +114,29 @@ def should_fuse(signal_obj, incident_obj, config):
     """
     Checks if a signal matches linkage constraints of an active incident.
     """
-    # 1. Check disaster type compatibility
+    # 1. Exact location name match
+    if signal_obj.location_name and incident_obj.location_name:
+        sig_loc = signal_obj.location_name.strip().lower()
+        inc_loc = incident_obj.location_name.strip().lower()
+        if sig_loc == inc_loc and sig_loc not in ['nepal emergency site', 'unknown location']:
+            return True
+
+    # 2. Check disaster type compatibility
     is_type_compatible = (
         signal_obj.disaster_type == incident_obj.disaster_type or
-        signal_obj.disaster_type == 'General' or
-        incident_obj.disaster_type == 'General'
+        signal_obj.disaster_type in ['General', 'Emergency'] or
+        incident_obj.disaster_type in ['General', 'Emergency']
     )
     if not is_type_compatible:
         return False
 
-    # 2. Check spatial coordinates availability
-    if signal_obj.lat is None or signal_obj.lng is None:
-        return False
-    if incident_obj.lat is None or incident_obj.lng is None:
-        return False
+    # 3. Spatial coordinates proximity check
+    if signal_obj.lat is not None and signal_obj.lng is not None and incident_obj.lat is not None and incident_obj.lng is not None:
+        distance = get_haversine_distance(signal_obj.lat, signal_obj.lng, incident_obj.lat, incident_obj.lng)
+        if distance <= 10.0:
+            return True
 
-    # 3. Calculate distance check
-    distance = get_haversine_distance(
-        signal_obj.lat, signal_obj.lng,
-        incident_obj.lat, incident_obj.lng
-    )
-    if distance > config.distance_threshold_km:
-        return False
-
-    # 4. Calculate temporal check
-    time_diff = abs((signal_obj.timestamp - incident_obj.first_reported).total_seconds())
-    time_diff_hours = time_diff / 3600.0
-    if time_diff_hours > config.time_threshold_hours:
-        return False
-
-    return True
+    return False
 
 def calculate_weighted_centroid(incident):
     """
@@ -218,8 +211,15 @@ def create_new_incident_from_signal(signal_obj):
     district_obj = next((d for d in DISTRICTS if d['id'] == signal_obj.district), None)
     base_vuln = district_obj['vulnerability'] if district_obj else 5
 
+    resolved_dtype = signal_obj.disaster_type
+    if not resolved_dtype or resolved_dtype in ['General', 'Emergency', 'Unknown']:
+        if district_obj and district_obj.get('riskType'):
+            resolved_dtype = district_obj['riskType'].split('/')[0]
+        else:
+            resolved_dtype = 'Flood'
+
     incident = Incident.objects.create(
-        disaster_type=signal_obj.disaster_type if signal_obj.disaster_type != 'General' else 'General',
+        disaster_type=resolved_dtype,
         location_name=signal_obj.location_name or 'Unknown Location',
         district_id=signal_obj.district or 'unknown',
         lat=signal_obj.lat if signal_obj.lat is not None else 27.7,

@@ -21,7 +21,6 @@
 {% block extra_js %}
 <script>
   let fullmap = null;
-  let fullMapNearbyAidLayer = null;
   let fmVulnLayer = null;
   let fmLayerData = null;
 
@@ -34,7 +33,6 @@
   function initFullMap() {
     fullmap = L.map('fullmap', { center: [28.1, 84.4], zoom: 7, zoomControl: true, attributionControl: false });
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 18 }).addTo(fullmap);
-    fullMapNearbyAidLayer = L.layerGroup().addTo(fullmap);
   }
 
   async function loadFullMapGISData() {

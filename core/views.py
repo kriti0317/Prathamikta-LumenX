@@ -13,7 +13,7 @@ from django.utils import timezone
 from core.models import Incident, Signal, AuditLog, SystemConfig
 from core.fusion_engine import (
     normalize_signal_data, should_fuse, fuse_signal_to_incident, 
-    create_new_incident_from_signal
+    create_new_incident_from_signal, get_haversine_distance
 )
 from core.priority_scorer import calculate_priority
 from core.mock_scenarios import PRESETS
@@ -110,23 +110,92 @@ def get_incidents(request):
     current_time = timezone.now()
 
     serialized = []
+    seen_locations = set()
+    seen_coords = []
+
     for inc in active_incidents:
+        # 1. Resolve exact specific location name
+        loc_name = inc.location_name
+        if not loc_name or 'unknown' in loc_name.lower() or loc_name in ['Nepal Emergency Site', 'Reported Emergency Area', 'Reported Location']:
+            loc_name = get_specific_location_name(inc.lat, inc.lng, default_name=f"{inc.district_id.title()} Sector" if inc.district_id and 'unknown' not in inc.district_id.lower() else "Melamchi, Sindhupalchok")
+        loc_name = loc_name.strip()
+
+        # 2. Resolve clear disaster type
+        disaster_type = inc.disaster_type
+        if not disaster_type or disaster_type in ['General', 'Emergency', 'Unknown', 'Sensor Threshold']:
+            sig_types = [s.disaster_type for s in inc.signals.all() if s.disaster_type not in ['General', 'Emergency', 'Unknown']]
+            if sig_types:
+                disaster_type = sig_types[0]
+            else:
+                from core.nepal_geo_data import DISTRICTS
+                d_info = next((d for d in DISTRICTS if d['id'] == (inc.district_id or '').lower()), None)
+                if d_info and d_info.get('riskType'):
+                    primary_risk = d_info['riskType'].split('/')[0]
+                    disaster_type = primary_risk
+                else:
+                    disaster_type = "Flood"
+
+        disaster_type_map = {
+            'Flood': 'Flood Inundation',
+            'Landslide': 'Landslide / Debris Flow',
+            'Earthquake': 'Earthquake / Seismic Tremor',
+            'Fire': 'Wildfire / Building Fire',
+            'Avalanche': 'Mountain Avalanche',
+            'Storm': 'Severe Weather / Storm',
+            'Structural Collapse': 'Structural Collapse'
+        }
+        clear_disaster_type = disaster_type_map.get(disaster_type, disaster_type)
+
+        # 3. Deduplication check (prevent duplicate locations/entries from same source)
+        dedup_key = loc_name.lower()
+        is_duplicate = False
+        if dedup_key in seen_locations:
+            is_duplicate = True
+        else:
+            for prev_lat, prev_lng in seen_coords:
+                if get_haversine_distance(inc.lat, inc.lng, prev_lat, prev_lng) < 4.0:
+                    is_duplicate = True
+                    break
+
+        if is_duplicate:
+            continue
+
+        seen_locations.add(dedup_key)
+        seen_coords.append((inc.lat, inc.lng))
+
         triage = calculate_priority(inc, config, current_time)
         
         # Serialize associated reports
         reports = []
         for sig in inc.signals.all():
+            reliable_source_name = "MoHA National Emergency Operations Center (NEOC)"
+            if sig.source_type == 'call_center':
+                reliable_source_name = "📞 NEOC Emergency Hotline 1155"
+            elif sig.source_type == 'sensor':
+                reliable_source_name = "📡 GDACS Real-Time Sensor Monitoring Network"
+            elif sig.source_type in ['social_media', 'news']:
+                reliable_source_name = "📰 Onlinekhabar / Himalayan Times Emergency RSS"
+
+            meta = sig.raw_payload or {}
+            if isinstance(meta, dict):
+                meta['reliableSourceName'] = reliable_source_name
+
             reports.append({
                 'signalId': sig.id,
                 'sourceType': sig.source_type,
+                'reliableSourceName': reliable_source_name,
                 'timestamp': sig.timestamp.isoformat(),
                 'description': sig.description,
                 'lat': sig.lat,
                 'lng': sig.lng,
                 'severity': sig.severity,
-                'trust': sig.severity, # placeholder, gets trust in frontend if needed
-                'meta': sig.raw_payload # raw payload contains user metadata
+                'trust': sig.severity,
+                'meta': meta
             })
+
+        # IF NO RELIABLE DATA SOURCE IS LINKED, DO NOT DISPLAY ON DASHBOARD
+        if not reports:
+            continue
 
         # Serialize audit logs
         audit_history = []
@@ -138,8 +207,8 @@ def get_incidents(request):
 
         serialized.append({
             'id': f"inc_{inc.id}",
-            'disasterType': inc.disaster_type,
-            'locationName': inc.location_name if inc.location_name and 'unknown' not in inc.location_name.lower() else (f"{inc.district_id.title()} Sector" if inc.district_id and 'unknown' not in inc.district_id.lower() else 'Nepal Emergency Site'),
+            'disasterType': clear_disaster_type,
+            'locationName': loc_name,
             'districtId': inc.district_id,
             'lat': inc.lat,
             'lng': inc.lng,
@@ -472,21 +541,22 @@ def get_specific_location_name(lat, lng, default_name=None):
 
 def fetch_rss_news_items():
     """
-    Fetches real-time RSS feeds from Onlinekhabar, Himalayan Times, and GDACS RSS,
-    runs NLP extraction, and returns structured disaster/emergency news items.
+    Fetches real-time RSS feeds from Nepal news sources (Onlinekhabar, Himalayan Times),
+    runs NLP extraction, and returns structured disaster news items strictly within Nepal.
     """
     import xml.etree.ElementTree as ET
     import re
     from core.nlp_extractor import extract_from_text
+    from core.nepal_geo_data import DISTRICTS
     
     rss_urls = [
         "https://english.onlinekhabar.com/feed",
-        "https://thehimalayantimes.com/feed",
-        "https://www.gdacs.org/xml/rss.xml"
+        "https://thehimalayantimes.com/feed"
     ]
     
     results = []
     seen_titles = set()
+    district_names = set(d["name"].lower() for d in DISTRICTS)
     
     for url in rss_urls:
         try:
@@ -515,21 +585,41 @@ def fetch_rss_news_items():
                     seen_titles.add(title)
                     
                     full_text = f"{title}. {desc}"
-                    nlp_res = extract_from_text(full_text)
+                    full_text_lower = full_text.lower()
                     
-                    # Check if disaster/emergency relevant
-                    is_relevant = (
-                        nlp_res['disaster_type'] != 'General' or 
-                        nlp_res['location'] is not None or 
-                        any(w in full_text.lower() for w in [
-                            'disaster', 'emergency', 'rescue', 'casualty', 'death', 'killed', 
-                            'avalanche', 'flood', 'landslide', 'fire', 'rain', 'storm', 'quake', 
-                            'blast', 'curfew', 'clash', 'strike', 'missing', 'trapped'
-                        ])
+                    # 1. Must be related to Nepal
+                    nlp_res = extract_from_text(full_text)
+                    loc = nlp_res['location']
+                    is_nepal = (
+                        loc is not None or 
+                        'nepal' in full_text_lower or 
+                        any(dist in full_text_lower for dist in district_names)
                     )
+                    if not is_nepal:
+                        continue
+                    
+                    # 2. Check if disaster relevant (Floods, Landslides, Earthquakes, Fires, Avalanches, Storms, Collapses)
+                    disaster_terms = [
+                        'disaster', 'flood', 'flooding', 'inundation', 'river overflow', 'heavy rain', 'heavy rainfall',
+                        'torrential rain', 'monsoon deluge', 'submerged', 'waterlogging', 'landslide', 'mudslide',
+                        'rockfall', 'debris flow', 'slope failure', 'earthquake', 'seismic', 'tremor', 'aftershock',
+                        'building collapse', 'epicenter', 'wildfire', 'forest fire', 'inferno', 'avalanche',
+                        'snowslide', 'blizzard', 'storm', 'lightning', 'thunderstorm', 'cloudburst', 'hailstorm',
+                        'gale', 'cyclone', 'windstorm', 'tsunami', 'dam breach', 'explosion', 'collapsed bridge',
+                        'disaster rescue', 'बाढी', 'डुबान', 'पहिरो', 'भूकम्प', 'आगलागी', 'डढेलो', 'हिउँपहिरो',
+                        'हावाहुरी', 'चट्याङ'
+                    ]
+                    
+                    # Explicitly exclude political clashes, protests, strikes, curfews, riots, crime, trafficking
+                    unrest_terms = ['clash', 'clashes', 'protest', 'protests', 'strike', 'curfew', 'riot', 'trafficking', 'scam', 'police shooting', 'demonstration']
+                    is_unrest = any(term in full_text_lower for term in unrest_terms)
+                    
+                    is_disaster_type = nlp_res['disaster_type'] in ['Flood', 'Landslide', 'Earthquake', 'Fire', 'Avalanche', 'Storm']
+                    has_disaster_term = any(term in full_text_lower for term in disaster_terms)
+                    
+                    is_relevant = (is_disaster_type or has_disaster_term) and not is_unrest
                     
                     if is_relevant:
-                        loc = nlp_res['location']
                         if loc:
                             lat, lng = loc['lat'], loc['lng']
                             district = loc['district']

@@ -18,7 +18,7 @@ DISASTER_KEYWORDS = {
         "भूकम्प", "कम्पन्न", "भूकम्पको धक्का", "घर भत्कियो", "भत्किएको"
     ],
     'Fire': [
-        "fire", "wildfire", "blaze", "smoke", "burning", "forest fire", "inferno", "torched", "set on fire", "arson",
+        "wildfire", "blaze", "smoke", "forest fire", "inferno", "building fire", "structural fire",
         "आगलागी", "डढेलो", "आगो", "सल्कियो", "जल्यो"
     ],
     'Avalanche': [
@@ -30,8 +30,8 @@ DISASTER_KEYWORDS = {
         "हावाहुरी", "चट्याङ"
     ],
     'Emergency': [
-        "curfew", "clash", "shooting", "drone attack", "protest", "explosion", "casualty", "casualties", "killed", "dead",
-        "trapped", "emergency", "crisis", "disaster", "fatal", "unrest", "strike", "riot"
+        "structural collapse", "building collapse", "bridge collapse", "dam breach", "explosion", "industrial accident",
+        "disaster rescue", "mass casualty", "trapped under rubble", "hazard emergency"
     ]
 }
 
