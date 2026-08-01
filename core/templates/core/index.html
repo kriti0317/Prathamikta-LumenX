@@ -6,21 +6,56 @@
 {% block content %}
 <div class="view active" id="view-dashboard">
   <div class="kpi-row">
-    <div class="kpi-card">
-      <div class="kpi-value" id="kpi-critical" style="color: var(--color-critical);">0</div>
-      <div class="kpi-label">Critical</div>
+    <div class="kpi-card kpi-card-critical">
+      <div class="kpi-icon-wrapper icon-critical">
+        <i data-lucide="activity" style="width: 22px; height: 22px; color: #fff;"></i>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-value-row">
+          <span class="kpi-value" id="kpi-critical" style="color: #ef4444;">0</span>
+        </div>
+        <div class="kpi-title">Critical</div>
+        <div class="kpi-subtitle">Requires immediate attention</div>
+      </div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-value" id="kpi-high" style="color: var(--color-high);">0</div>
-      <div class="kpi-label">High Priority</div>
+
+    <div class="kpi-card kpi-card-high">
+      <div class="kpi-icon-wrapper icon-high">
+        <i data-lucide="shield-alert" style="width: 22px; height: 22px; color: #fff;"></i>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-value-row">
+          <span class="kpi-value" id="kpi-high" style="color: #f97316;">0</span>
+        </div>
+        <div class="kpi-title">High Priority</div>
+        <div class="kpi-subtitle">Urgent but not critical</div>
+      </div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-value" id="kpi-medium" style="color: var(--color-medium);">0</div>
-      <div class="kpi-label">Medium</div>
+
+    <div class="kpi-card kpi-card-medium">
+      <div class="kpi-icon-wrapper icon-medium">
+        <i data-lucide="bar-chart-2" style="width: 22px; height: 22px; color: #fff;"></i>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-value-row">
+          <span class="kpi-value" id="kpi-medium" style="color: #eab308;">0</span>
+        </div>
+        <div class="kpi-title">Medium</div>
+        <div class="kpi-subtitle">Monitor and track</div>
+      </div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-value" id="kpi-total" style="color: white;">0</div>
-      <div class="kpi-label">Total</div>
+
+    <div class="kpi-card kpi-card-total">
+      <div class="kpi-icon-wrapper icon-total">
+        <i data-lucide="file-text" style="width: 22px; height: 22px; color: #fff;"></i>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-value-row">
+          <span class="kpi-value" id="kpi-total" style="color: #38bdf8;">0</span>
+        </div>
+        <div class="kpi-title">Total Incidents</div>
+        <div class="kpi-subtitle">Across all priorities</div>
+      </div>
     </div>
   </div>
 
@@ -29,8 +64,9 @@
     <div style="display: flex; flex-direction: column; gap: 12px; height: 100%; min-height: 0;">
       <!-- PRIORITY QUEUE -->
       <div class="panel" style="flex: 3; min-height: 0;">
-        <div class="panel-header">
-          Priority Queue
+        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>📋 Priority Queue</span>
+          <span style="font-size: 10px; background: rgba(59,130,246,0.15); color: #93c5fd; padding: 2px 6px; border-radius: 4px;">Live Triage</span>
         </div>
         <div class="queue" id="queue-list"></div>
       </div>
@@ -38,7 +74,7 @@
       <!-- LIVE FEEDS -->
       <div class="panel" style="flex: 2; min-height: 0;">
         <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
-          <span>Live External Feeds (GDACS / RSS)</span>
+          <span>📡 Live External Feeds (GDACS / RSS)</span>
           <i data-lucide="activity" style="width: 14px; color: #f59e0b; animation: pulse 2s infinite;"></i>
         </div>
         <div class="queue" id="live-feeds-list"></div>
@@ -48,7 +84,7 @@
     <!-- MAP -->
     <div class="panel" style="position: relative;">
       <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <span>Live Locations</span>
+        <span>🗺️ Live Locations GIS Map</span>
         <label style="cursor: pointer; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 1px 6px; border-radius: 4px; color: #fca5a5; font-size: 10px; display: flex; align-items: center; gap: 4px;">
           <input type="checkbox" id="toggle-vuln-heatmap" onchange="toggleVulnerabilityHeatmap(this.checked)"> 🔥 Risk Heatmap
         </label>
@@ -56,11 +92,9 @@
       <div id="map" style="flex: 1;"></div>
     </div>
 
-
-
     <!-- DETAILS -->
     <div class="panel">
-      <div class="panel-header">Details</div>
+      <div class="panel-header">📑 Incident Details & Data Sources</div>
       <div class="details" id="details-panel">
         <div class="detail-empty">Select an incident to view details</div>
       </div>

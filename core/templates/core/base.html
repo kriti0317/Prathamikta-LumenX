@@ -49,6 +49,10 @@
         <i data-lucide="file-text" style="width: 16px;"></i>
         Reports
       </a>
+      <a class="nav-item {% block nav_analytics %}{% endblock %}" id="nav-analytics" href="{% url 'analytics' %}">
+        <i data-lucide="bar-chart-3" style="width: 16px;"></i>
+        Risk Analytics
+      </a>
       <a class="nav-item" id="nav-sync-feeds" onclick="syncLiveFeeds()"
         style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; color: #60a5fa;">
         <i data-lucide="refresh-cw" style="width: 16px; color: #60a5fa;"></i>

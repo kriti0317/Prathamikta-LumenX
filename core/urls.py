@@ -6,6 +6,7 @@ urlpatterns = [
     path('incidents/', views.all_incidents, name='all_incidents'),
     path('map/', views.full_map, name='full_map'),
     path('reports/', views.reports_view, name='reports'),
+    path('analytics/', views.analytics_view, name='analytics'),
 
     # API endpoints
     path('api/incidents/', views.get_incidents, name='get_incidents'),
@@ -20,5 +21,6 @@ urlpatterns = [
     path('api/feeds/gdacs/', views.fetch_gdacs_feeds, name='fetch_gdacs_feeds'),
     path('api/feeds/gdacs/sync/', views.sync_gdacs_live_feed, name='sync_gdacs_live_feed'),
     path('api/map/vulnerability-layers/', views.vulnerability_layers, name='vulnerability_layers'),
+    path('api/analytics/history/', views.analytics_data_api, name='analytics_data_api'),
 ]
 

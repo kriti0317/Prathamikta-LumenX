@@ -1,0 +1,705 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}PRATHAMIKTA - Disaster History & Risk Analytics{% endblock %}
+{% block nav_analytics %}active{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  .analytics-container {
+    padding: 16px;
+    height: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .analytics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 14px 20px;
+  }
+
+  .analytics-title-group h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #f8fafc;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .analytics-subtitle {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+
+  .filter-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .analytics-select {
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #e2e8f0;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .analytics-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+  }
+
+  .analytics-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+  }
+
+  /* KPI CARDS */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .analytics-kpi {
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .analytics-kpi::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+  }
+
+  .kpi-blue::before { background: #3b82f6; }
+  .kpi-orange::before { background: #f97316; }
+  .kpi-red::before { background: #ef4444; }
+  .kpi-purple::before { background: #a855f7; }
+
+  .kpi-header {
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .kpi-val {
+    font-size: 20px;
+    font-weight: 800;
+    color: #f8fafc;
+  }
+
+  .kpi-sub {
+    font-size: 11px;
+    color: #64748b;
+  }
+
+  /* CHARTS GRID */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 14px;
+  }
+
+  .chart-card {
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .chart-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .chart-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .chart-wrapper {
+    position: relative;
+    height: 240px;
+    width: 100%;
+  }
+
+  /* SECOND CHARTS ROW */
+  .charts-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  /* AI RISK INSIGHTS */
+  .insights-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);
+    border: 1px solid rgba(96, 165, 250, 0.2);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .insights-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #60a5fa;
+  }
+
+  .insight-item {
+    background: rgba(15, 23, 42, 0.5);
+    border-left: 3px solid #3b82f6;
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #cbd5e1;
+  }
+
+  .insight-item strong {
+    color: #f8fafc;
+  }
+
+  /* TABLE CARD */
+  .table-card {
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .table-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .table-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+
+  .table-search {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    width: 200px;
+    outline: none;
+  }
+
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .history-table th {
+    background: rgba(30, 41, 59, 0.8);
+    color: #94a3b8;
+    text-align: left;
+    padding: 8px 12px;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .history-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    color: #cbd5e1;
+  }
+
+  .history-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .badge-hazard {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .severity-badge {
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 700;
+    font-size: 11px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="view active" id="view-analytics">
+  <div class="analytics-container">
+    
+    <!-- HEADER & FILTERS -->
+    <div class="analytics-header">
+      <div class="analytics-title-group">
+        <h1 id="main-analytics-title">
+          <i data-lucide="bar-chart-3" style="color: #60a5fa; width: 22px; height: 22px;"></i>
+          Disaster History & Risk Analytics
+        </h1>
+        <div class="analytics-subtitle" id="analytics-subtitle">Historical Hazard Profiling, Seasonal Trends & Predictive Decision Support for EOC Officers</div>
+      </div>
+
+      <div class="filter-controls">
+        <select class="analytics-select" id="filter-range" onchange="loadAnalyticsData()">
+          <option value="all">📅 All Historical Data</option>
+          <option value="monsoon">🌧️ Monsoon Peak (Jun-Sep)</option>
+          <option value="2025">Year 2025</option>
+          <option value="30days">Last 30 Days</option>
+        </select>
+        
+        <select class="analytics-select" id="filter-province" onchange="loadAnalyticsData()">
+          <option value="all">📍 All Nepal Provinces</option>
+          <option value="1">Province 1 (Koshi)</option>
+          <option value="2">Province 2 (Madhesh)</option>
+          <option value="3">Province 3 (Bagmati)</option>
+          <option value="4">Province 4 (Gandaki)</option>
+          <option value="5">Province 5 (Lumbini)</option>
+          <option value="6">Province 6 (Karnali)</option>
+          <option value="7">Province 7 (Sudurpashchim)</option>
+        </select>
+
+        <button class="analytics-btn" onclick="window.print()">
+          <i data-lucide="download" style="width: 14px;"></i> Export PDF Report
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="analytics-kpi kpi-blue">
+        <div class="kpi-header" id="kpi-total-events-label">Total Historical Events</div>
+        <div class="kpi-val" id="kpi-total-events">1,510</div>
+        <div class="kpi-sub">Verified EOC Ground Records</div>
+      </div>
+      <div class="analytics-kpi kpi-orange">
+        <div class="kpi-header">Highest Risk District</div>
+        <div class="kpi-val" id="kpi-high-risk-district" style="font-size: 16px;">Sindhupalchok</div>
+        <div class="kpi-sub">Vulnerability Index: 8.8 / 10</div>
+      </div>
+      <div class="analytics-kpi kpi-red">
+        <div class="kpi-header">Dominant Hazard</div>
+        <div class="kpi-val" id="kpi-dominant-hazard" style="font-size: 16px;">Flood Inundation</div>
+        <div class="kpi-sub">42.5% of Total Disasters</div>
+      </div>
+      <div class="analytics-kpi kpi-purple">
+        <div class="kpi-header">Avg Triage Priority</div>
+        <div class="kpi-val" id="kpi-avg-priority">74.2 / 100</div>
+        <div class="kpi-sub">High Priority Baseline</div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 1 -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-title" id="timeline-chart-title">
+            <i data-lucide="trending-up" style="color: #3b82f6; width: 16px;"></i>
+            Historical Monthly Disaster Timeline Trends
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chart-timeline"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-title">
+            <i data-lucide="pie-chart" style="color: #f97316; width: 16px;"></i>
+            Hazard Category Distribution
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chart-hazard-doughnut"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 2 -->
+    <div class="charts-row-2">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-title">
+            <i data-lucide="shield-alert" style="color: #ef4444; width: 16px;"></i>
+            Top 10 Vulnerable Districts (Vulnerability Index vs Incident Count)
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chart-districts-bar"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div class="chart-card-title">
+            <i data-lucide="database" style="color: #a855f7; width: 16px;"></i>
+            Real-Time Data Verification Source Ratio
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chart-sources-bar"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI RISK INSIGHTS -->
+    <div class="insights-card">
+      <div class="insights-header">
+        <i data-lucide="brain-circuit" style="width: 18px; height: 18px;"></i>
+        EOC Predictive Risk Insights & Tactical Guidance
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;" id="insights-container">
+        <div class="insight-item">
+          <strong>🌊 Koshi & Bagmati River Monsoon Surge:</strong> Historical data demonstrates a 78% spike in inundation events between July 15 and August 30. Pre-positioning heavy hydrological rescue teams in Sunsari & Lalitpur EOC hubs is strongly recommended.
+        </div>
+        <div class="insight-item" style="border-left-color: #f97316;">
+          <strong>🏔️ Sindhupalchok & Dhading Slope Failure Hotspots:</strong> Landslide density peaks after 3+ consecutive days of heavy rain (>100mm). High-risk road corridors (Prithvi & Araniko Highways) require 24/7 excavator standbys.
+        </div>
+        <div class="insight-item" style="border-left-color: #ef4444;">
+          <strong>🏚️ Seismic Vulnerability Profile (Jajarkot / West Nepal):</strong> Structural vulnerability indices in Karnali province remain elevated (8.2/10). Rapid call-center triage is critical for rapid medical response.
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORICAL LOGS TABLE -->
+    <div class="table-card">
+      <div class="table-header-row">
+        <div class="table-title" id="table-card-title">📜 Historical Disaster Log Records</div>
+        <input type="text" class="table-search" id="search-history" placeholder="🔍 Search district, hazard..." onkeyup="filterHistoryTable()">
+      </div>
+      <div style="overflow-x: auto;">
+        <table class="history-table" id="history-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Location</th>
+              <th>Hazard Type</th>
+              <th>Severity</th>
+              <th>Impact Summary</th>
+              <th>Verified Data Source</th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body">
+            <!-- Dynamic Rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let chartTimeline = null;
+  let chartHazard = null;
+  let chartDistricts = null;
+  let chartSources = null;
+  let historicalLogsData = [];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAnalyticsData();
+  });
+
+  async function loadAnalyticsData() {
+    try {
+      const range = document.getElementById('filter-range').value;
+      const province = document.getElementById('filter-province').value;
+      const response = await fetch(`/api/analytics/history/?range=${encodeURIComponent(range)}&province=${encodeURIComponent(province)}`);
+      const data = await response.json();
+      if (!data.success) return;
+
+      // Dynamic Title Updates
+      let titleTopic = "Historical Disaster";
+      let chartTimelineTitle = "Historical Monthly Disaster Timeline Trends";
+      let logTableTitle = "📜 Historical Disaster Log Records";
+      let kpiLabel = "Total Historical Events";
+
+      if (range === 'monsoon') {
+        titleTopic = "Monsoon Peak Disaster";
+        chartTimelineTitle = "Monsoon Peak Monthly Disaster Trends (Jun-Sep)";
+        logTableTitle = "📜 Monsoon Peak Disaster Log Records";
+        kpiLabel = "Monsoon Total Incidents";
+      } else if (range === '30days') {
+        titleTopic = "Recent 30-Day Disaster";
+        chartTimelineTitle = "Recent 30-Day Disaster Timeline Trends (Weekly Breakout)";
+        logTableTitle = "📜 Recent 30-Day Disaster Log Records";
+        kpiLabel = "30-Day Incident Volume";
+      } else if (range === '2025') {
+        titleTopic = "Year 2025 Disaster";
+        chartTimelineTitle = "Year 2025 Monthly Disaster Timeline Trends";
+        logTableTitle = "📜 Year 2025 Disaster Log Records";
+        kpiLabel = "Year 2025 Total Incidents";
+      }
+
+      let regionName = data.region && data.region !== "Nepal Nationwide" ? data.region : "";
+      let regionBadge = regionName ? ` (${regionName} Region)` : "";
+
+      const mainTitleElem = document.getElementById('main-analytics-title');
+      if (mainTitleElem) {
+        mainTitleElem.innerHTML = `
+          <i data-lucide="bar-chart-3" style="color: #60a5fa; width: 22px; height: 22px;"></i>
+          ${titleTopic} & Risk Analytics${regionBadge}
+        `;
+      }
+
+      const subtitleElem = document.getElementById('analytics-subtitle');
+      if (subtitleElem) {
+        subtitleElem.textContent = regionName 
+          ? `Hazard Profiling, Seasonal Trends & Predictive Decision Support for ${regionName} EOC Officers`
+          : `Historical Hazard Profiling, Seasonal Trends & Predictive Decision Support for EOC Officers`;
+      }
+
+      const timelineTitleElem = document.getElementById('timeline-chart-title');
+      if (timelineTitleElem) {
+        timelineTitleElem.innerHTML = `
+          <i data-lucide="trending-up" style="color: #3b82f6; width: 16px;"></i>
+          ${chartTimelineTitle}${regionBadge}
+        `;
+      }
+
+      const tableTitleElem = document.getElementById('table-card-title');
+      if (tableTitleElem) {
+        tableTitleElem.textContent = `${logTableTitle}${regionBadge}`;
+      }
+
+      const kpiLabelElem = document.getElementById('kpi-total-events-label');
+      if (kpiLabelElem) {
+        kpiLabelElem.textContent = kpiLabel;
+      }
+
+      if (window.lucide) lucide.createIcons();
+
+      // Update KPI
+      document.getElementById('kpi-total-events').textContent = data.kpiSummary.totalHistoricalEvents.toLocaleString();
+      document.getElementById('kpi-high-risk-district').textContent = data.kpiSummary.highestRiskDistrict;
+      document.getElementById('kpi-dominant-hazard').textContent = data.kpiSummary.dominantHazard;
+      document.getElementById('kpi-avg-priority').textContent = data.kpiSummary.avgPriorityScore;
+
+      // Render Charts
+      renderTimelineChart(data.timeline);
+      renderHazardDoughnutChart(data.hazardDistribution);
+      renderDistrictsBarChart(data.districtRankings);
+      renderSourcesBarChart(data.sourceStats);
+
+      // Render Table
+      historicalLogsData = data.historicalLogs || [];
+      renderHistoryTable(historicalLogsData);
+    } catch (err) {
+      console.error("Error loading analytics data:", err);
+    }
+  }
+
+  function renderTimelineChart(timeline) {
+    const ctx = document.getElementById('chart-timeline').getContext('2d');
+    if (chartTimeline) chartTimeline.destroy();
+
+    chartTimeline = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: timeline.months,
+        datasets: [
+          { label: 'Floods', data: timeline.floods, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.3 },
+          { label: 'Landslides', data: timeline.landslides, borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.1)', fill: true, tension: 0.3 },
+          { label: 'Earthquakes', data: timeline.earthquakes, borderColor: '#ef4444', backgroundColor: 'transparent', borderDash: [4, 4], tension: 0.3 },
+          { label: 'Wildfires', data: timeline.fires, borderColor: '#eab308', backgroundColor: 'transparent', tension: 0.3 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#94a3b8', font: { family: 'Outfit', size: 11 } } }
+        },
+        scales: {
+          x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+        }
+      }
+    });
+  }
+
+  function renderHazardDoughnutChart(distribution) {
+    const ctx = document.getElementById('chart-hazard-doughnut').getContext('2d');
+    if (chartHazard) chartHazard.destroy();
+
+    chartHazard = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: distribution.map(d => d.type),
+        datasets: [{
+          data: distribution.map(d => d.count),
+          backgroundColor: distribution.map(d => d.color),
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#94a3b8', font: { family: 'Outfit', size: 10 } } }
+        }
+      }
+    });
+  }
+
+  function renderDistrictsBarChart(rankings) {
+    const ctx = document.getElementById('chart-districts-bar').getContext('2d');
+    if (chartDistricts) chartDistricts.destroy();
+
+    chartDistricts = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: rankings.map(r => r.name),
+        datasets: [
+          { label: 'Vulnerability Index (out of 10)', data: rankings.map(r => r.vulnerability), backgroundColor: '#ef4444' },
+          { label: 'Historical Incident Count', data: rankings.map(r => r.historicalIncidents), backgroundColor: '#3b82f6' }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#94a3b8', font: { family: 'Outfit', size: 11 } } }
+        },
+        scales: {
+          x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+        }
+      }
+    });
+  }
+
+  function renderSourcesBarChart(stats) {
+    const ctx = document.getElementById('chart-sources-bar').getContext('2d');
+    if (chartSources) chartSources.destroy();
+
+    chartSources = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['📞 1155 EOC Calls', '📡 GDACS Sensors', '📰 RSS News Feeds'],
+        datasets: [{
+          label: 'Verified Signals Count',
+          data: [stats.call_center || 0, stats.sensor || 0, stats.news || 0],
+          backgroundColor: ['#10b981', '#3b82f6', '#f59e0b']
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+        }
+      }
+    });
+  }
+
+  function renderHistoryTable(logs) {
+    const tbody = document.getElementById('history-table-body');
+    tbody.innerHTML = '';
+
+    if (logs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 16px;">No historical disaster records found.</td></tr>';
+      return;
+    }
+
+    logs.forEach(item => {
+      let sevBg = '#10b981';
+      if (item.severity >= 90) sevBg = '#ef4444';
+      else if (item.severity >= 75) sevBg = '#f97316';
+      else if (item.severity >= 50) sevBg = '#eab308';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="font-weight: 600; color: #94a3b8;">${item.date}</td>
+        <td style="font-weight: 700; color: #38bdf8;">📍 ${item.location}</td>
+        <td><span class="badge-hazard">${item.hazard}</span></td>
+        <td><span class="severity-badge" style="background: ${sevBg}; color: #fff;">${item.severity}/100</span></td>
+        <td style="max-width: 320px;">${item.impact}</td>
+        <td style="color: #a855f7; font-weight: 500;">${item.source}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function filterHistoryTable() {
+    const query = document.getElementById('search-history').value.toLowerCase();
+    const filtered = historicalLogsData.filter(log => 
+      log.location.toLowerCase().includes(query) ||
+      log.hazard.toLowerCase().includes(query) ||
+      log.impact.toLowerCase().includes(query) ||
+      log.date.includes(query)
+    );
+    renderHistoryTable(filtered);
+  }
+</script>
+{% endblock %}

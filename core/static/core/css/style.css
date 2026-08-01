@@ -866,33 +866,109 @@ input[type="checkbox"] {
   cursor: pointer;
 }
 
-/* KPI CARDS */
+/* REPLICA KPI CARDS */
 .kpi-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  padding: 12px;
-  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  padding: 12px 14px;
+  background: transparent;
 }
 
 .kpi-card {
-  background: rgba(10, 15, 25, 0.6);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 10px 12px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.kpi-card-critical {
+  border-left: 3px solid #ef4444;
+}
+
+.kpi-card-high {
+  border-left: 3px solid #f97316;
+}
+
+.kpi-card-medium {
+  border-left: 3px solid #eab308;
+}
+
+.kpi-card-total {
+  border-left: 3px solid #38bdf8;
+}
+
+.kpi-icon-wrapper {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon-critical {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.45);
+}
+
+.icon-high {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.45);
+}
+
+.icon-medium {
+  background: linear-gradient(135deg, #eab308 0%, #d97706 100%);
+  box-shadow: 0 0 16px rgba(234, 179, 8, 0.45);
+}
+
+.icon-total {
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.45);
+}
+
+.kpi-body {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  justify-content: center;
+}
+
+.kpi-value-row {
+  display: flex;
+  align-items: baseline;
 }
 
 .kpi-value {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1;
 }
 
-.kpi-label {
-  font-size: 10px;
-  color: var(--text-secondary);
+.kpi-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-top: 4px;
+  letter-spacing: 0.2px;
+}
+
+.kpi-subtitle {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
 }
 
 @keyframes spin {
