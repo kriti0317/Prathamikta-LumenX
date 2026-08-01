@@ -8,7 +8,8 @@ from core.nepal_geo_data import DISTRICTS
 SOURCE_TRUST = {
     'call_center': 1.0,
     'sensor': 0.9,
-    'social_media': 0.4
+    'social_media': 0.4,
+    'news': 0.8
 }
 
 def get_haversine_distance(lat1, lon1, lat2, lon2):
@@ -29,68 +30,45 @@ def normalize_signal_data(raw_data, source_type, timestamp_str=None):
     """
     Normalizes raw payload data into a dictionary structure mapping to Signal fields.
     """
-    trust = SOURCE_TRUST.get(source_type, 0.3)
+    trust = SOURCE_TRUST.get(source_type, 0.5)
     
     if timestamp_str:
-        # Parse ISO timestamp
         timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
     else:
         timestamp = timezone.now()
 
-    disaster_type = 'General'
-    location_name = 'Reported Emergency Area'
-    district = 'general'
-    lat = None
-    lng = None
-    severity = 5
-    is_life_threat = False
-    description = ''
+    disaster_type = raw_data.get('needType') or raw_data.get('hazardType') or 'General'
+    location_name = raw_data.get('locationName') or 'Reported Emergency Area'
+    district = raw_data.get('district') or 'general'
+    lat = float(raw_data.get('lat')) if raw_data.get('lat') is not None else None
+    lng = float(raw_data.get('lng')) if raw_data.get('lng') is not None else None
+    severity = int(raw_data.get('operatorSeverity') or raw_data.get('severity') or 5)
+    is_life_threat = bool(raw_data.get('isLifeThreat', False))
+    description = raw_data.get('description') or raw_data.get('text') or ''
     raw_payload = raw_data
 
-    if source_type == 'call_center':
-        disaster_type = raw_data.get('needType', 'General')
-        description = raw_data.get('description', '')
-        severity = int(raw_data.get('operatorSeverity', 5))
-        is_life_threat = bool(raw_data.get('isLifeThreat', False))
-        
-        lat = float(raw_data.get('lat')) if raw_data.get('lat') else None
-        lng = float(raw_data.get('lng')) if raw_data.get('lng') else None
-        district = raw_data.get('district') or 'general'
-        location_name = raw_data.get('locationName') or 'Reported Emergency Area'
-
-    elif source_type == 'sensor':
-        disaster_type = raw_data.get('hazardType', 'Sensor Threshold')
+    if source_type == 'sensor' and not description:
         sensor_name = raw_data.get('sensorName', 'Remote Sensor')
         val = raw_data.get('value', 0)
         unit = raw_data.get('unit', '')
         threshold = raw_data.get('threshold', 0)
-        
         description = f"Sensor Breach: {sensor_name} reported {val} {unit} (Threshold: {threshold} {unit})"
-        
-        # Calculate severity based on breach ratio
         if val >= threshold * 1.5:
             severity = 9
         elif val >= threshold * 1.2:
             severity = 7
-        else:
-            severity = 5
-            
         is_life_threat = severity >= 9
-        lat = float(raw_data.get('lat')) if raw_data.get('lat') else None
-        lng = float(raw_data.get('lng')) if raw_data.get('lng') else None
-        district = raw_data.get('district', 'unknown')
-        location_name = raw_data.get('locationName', sensor_name)
 
-    elif source_type == 'social_media':
-        text = raw_data.get('text', '')
-        nlp = extract_from_text(text)
+    elif source_type in ['social_media', 'news'] and description:
+        nlp = extract_from_text(description)
+        if disaster_type == 'General' and nlp.get('disaster_type') and nlp['disaster_type'] != 'General':
+            disaster_type = nlp['disaster_type']
+        if severity == 5 and nlp.get('severity'):
+            severity = nlp['severity']
+        if not is_life_threat and nlp.get('is_life_threat'):
+            is_life_threat = nlp['is_life_threat']
         
-        disaster_type = nlp['disaster_type']
-        description = text
-        severity = nlp['severity']
-        is_life_threat = nlp['is_life_threat']
-        
-        if nlp['location']:
+        if (lat is None or lng is None) and nlp.get('location'):
             location_name = nlp['location']['name']
             lat = nlp['location']['lat']
             lng = nlp['location']['lng']

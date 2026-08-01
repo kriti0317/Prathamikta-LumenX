@@ -147,17 +147,26 @@
           <label>Location</label>
           <input type="text" id="location" placeholder="e.g. Khokana, Lalitpur" required />
         </div>
-
         <div class="form-group">
           <label>District</label>
           <select id="district" required>
-            <option value="lalitpur">Lalitpur</option>
             <option value="kathmandu">Kathmandu</option>
+            <option value="lalitpur">Lalitpur</option>
             <option value="bhaktapur">Bhaktapur</option>
+            <option value="sindhupalchok">Sindhupalchok</option>
             <option value="kaski">Kaski (Pokhara)</option>
             <option value="chitwan">Chitwan</option>
-            <option value="sindhupalchok">Sindhupalchok</option>
             <option value="sunsari">Sunsari</option>
+            <option value="jhapa">Jhapa</option>
+            <option value="morang">Morang</option>
+            <option value="solukhumbu">Solukhumbu</option>
+            <option value="jajarkot">Jajarkot</option>
+            <option value="rasuwa">Rasuwa</option>
+            <option value="dhading">Dhading</option>
+            <option value="ilam">Ilam</option>
+            <option value="makwanpur">Makwanpur</option>
+            <option value="gorkha">Gorkha</option>
+            <option value="mustang">Mustang</option>
           </select>
         </div>
 
@@ -168,7 +177,7 @@
 
         <div class="form-group">
           <label>Severity (1-10)</label>
-          <input type="number" id="severity" min="1" max="10" value="7" required />
+          <input type="number" id="severity" min="1" max="10" value="8" required />
         </div>
 
         <div class="checkbox-group">
@@ -179,7 +188,7 @@
         </div>
 
         <button type="submit" class="submit-btn">
-          <i data-lucide="send" style="width: 14px;"></i> Ingest & Triage
+          <i data-lucide="send" style="width: 14px;"></i> Ingest & Triage Signal
         </button>
       </form>
     </div>
@@ -192,13 +201,23 @@
     let liveFeeds = [];
     let feedMarkers = [];
     const districtCoords = {
-      lalitpur: { lat: 27.632, lng: 85.295 },
       kathmandu: { lat: 27.717, lng: 85.324 },
+      lalitpur: { lat: 27.632, lng: 85.295 },
       bhaktapur: { lat: 27.671, lng: 85.429 },
+      sindhupalchok: { lat: 27.832, lng: 85.584 },
       kaski: { lat: 28.209, lng: 83.985 },
       chitwan: { lat: 27.678, lng: 84.432 },
-      sindhupalchok: { lat: 27.832, lng: 85.584 },
-      sunsari: { lat: 26.6, lng: 87.15 }
+      sunsari: { lat: 26.600, lng: 87.150 },
+      jhapa: { lat: 26.630, lng: 87.900 },
+      morang: { lat: 26.650, lng: 87.350 },
+      solukhumbu: { lat: 27.750, lng: 86.730 },
+      jajarkot: { lat: 28.700, lng: 82.200 },
+      rasuwa: { lat: 28.150, lng: 85.350 },
+      dhading: { lat: 27.850, lng: 84.900 },
+      ilam: { lat: 26.910, lng: 87.920 },
+      makwanpur: { lat: 27.420, lng: 85.030 },
+      gorkha: { lat: 28.000, lng: 84.630 },
+      mustang: { lat: 28.800, lng: 83.800 }
     };
 
     function cleanLocation(locName, districtName) {
@@ -239,14 +258,9 @@
         if (data.success) {
           alert(`Successfully ingested ${data.count} real-time signals!`);
           if (typeof fetchIncidents === 'function') fetchIncidents();
-          if (typeof fetchLiveFeeds === 'function') fetchLiveFeeds();
-          if (typeof fetchReports === 'function') fetchReports();
-        } else {
-          alert(`Error syncing: ${data.error || 'Unknown error'}`);
         }
       } catch (err) {
         console.error(err);
-        alert('Failed to connect to sync API.');
       } finally {
         syncBtn.style.pointerEvents = 'auto';
         syncBtn.innerHTML = originalHtml;
@@ -305,34 +319,51 @@
     });
 
     function openIngestModal() {
-      document.getElementById('ingest-modal').style.display = 'flex';
+      const modal = document.getElementById('ingest-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+        const locInput = document.getElementById('location');
+        if (locInput) locInput.focus();
+      }
     }
 
     function closeIngestModal() {
-      document.getElementById('ingest-modal').style.display = 'none';
+      const modal = document.getElementById('ingest-modal');
+      if (modal) {
+        modal.style.display = 'none';
+      }
     }
+
+    document.addEventListener('click', (e) => {
+      const modal = document.getElementById('ingest-modal');
+      if (modal && e.target === modal) {
+        closeIngestModal();
+      }
+    });
 
     async function submitSignal(e) {
       e.preventDefault();
 
       const sourceType = document.getElementById('source-type').value;
       const hazardType = document.getElementById('hazard-type').value;
-      const location = document.getElementById('location').value;
+      const location = document.getElementById('location').value.trim();
       const district = document.getElementById('district').value;
-      const description = document.getElementById('description').value;
+      const description = document.getElementById('description').value.trim();
       const severity = parseInt(document.getElementById('severity').value);
       const isLifeThreat = document.getElementById('life-threat').checked;
 
       const coords = districtCoords[district] || { lat: 27.7, lng: 85.3 };
 
       const rawData = {
-        callerName: 'Real-Time Ingest',
+        callerName: 'Manual EOC Dispatcher Ingest',
         needType: hazardType,
-        lat: coords.lat + (Math.random() - 0.5) * 0.02,
-        lng: coords.lng + (Math.random() - 0.5) * 0.02,
+        hazardType: hazardType,
+        lat: coords.lat + (Math.random() - 0.5) * 0.015,
+        lng: coords.lng + (Math.random() - 0.5) * 0.015,
         district: district,
         locationName: location,
         operatorSeverity: severity,
+        severity: severity,
         isLifeThreat: isLifeThreat,
         description: description
       };
@@ -347,9 +378,18 @@
         if (data.success) {
           closeIngestModal();
           document.getElementById('ingest-form').reset();
+          if (data.incidentId) {
+            selectedIncId = data.incidentId;
+          }
+          alert(`✅ Disaster Signal Successfully Ingested & Triaged into Incident ${data.incidentId}!`);
           if (typeof fetchIncidents === 'function') fetchIncidents();
+        } else {
+          alert(`❌ Failed to ingest signal: ${data.error || 'Unknown error'}`);
         }
-      } catch (err) { console.error(err); }
+      } catch (err) { 
+        console.error("Ingest error:", err);
+        alert("❌ Error ingesting signal. Please check connection.");
+      }
     }
   </script>
 

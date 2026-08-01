@@ -74,6 +74,23 @@ PRESETS = {
                     'url': "https://facebook.com/floodwatch"
                 }
             },
+            {
+                'sourceType': 'news',
+                'timestamp': '2025-05-10T14:35:00+05:45',
+                'rawData': {
+                    'sensorId': 'rss_onlinekhabar_khokana',
+                    'sensorName': 'Onlinekhabar Emergency RSS',
+                    'needType': 'Flood',
+                    'lat': 27.632,
+                    'lng': 85.295,
+                    'district': 'lalitpur',
+                    'locationName': 'Khokana, Lalitpur',
+                    'operatorSeverity': 9,
+                    'isLifeThreat': True,
+                    'description': "Onlinekhabar RSS: Bagmati river overflows into Khokana settlements, trapped residents call for immediate rescue.",
+                    'url': "https://english.onlinekhabar.com/bagmati-flood-khokana.html"
+                }
+            },
 
             # Incident 2: Building Collapsed (Thaiba, Kathmandu) - Rank 2, Score 94
             {

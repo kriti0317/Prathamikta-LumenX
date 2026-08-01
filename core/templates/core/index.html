@@ -356,12 +356,12 @@
 
       <div class="detail-section">Priority Scoring</div>
       <div class="detail-row">
-        <span class="detail-label">Formula Score</span>
+        <span class="detail-label">📊 Formula Score</span>
         <span class="detail-value">${inc.formulaScore || Math.round(score * 0.95)}/100</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label">AI Suggestion</span>
-        <span class="detail-value">${inc.aiSuggestedScore || score}/100</span>
+        <span class="detail-label">🧠 AI Suggestion (gpt-oss-20b)</span>
+        <span class="detail-value" style="color: #a855f7; font-weight: 700;">${inc.aiSuggestedScore || score}/100</span>
       </div>
 
       <div class="detail-section">Status</div>
