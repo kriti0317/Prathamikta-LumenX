@@ -48,15 +48,6 @@ The prototype currently uses **dummy/simulated EOC call logs and sensor data**, 
 * Municipal Emergency Response Units
 * Disaster Response Teams
 
-## 👥 Team LumneX
-
-* Kriti Koju
-* Sampada Shrestha
-* Subekshya Karki
-* Shronal Duwal
-
-
-
 ## 🛠️ Tech Stack
 - Frontend: *Html/css/js*
 - Backend: *Python With django*
